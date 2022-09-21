@@ -9,23 +9,49 @@
 // Constants
 #define FILE_ROOT "../files/"
 
+// Global
+DataLayer dataLayer;
+ViewLayer viewLayer;
+
+string sendFile() {
+    string filePath = viewLayer.sendFileDisplay();
+    return dataLayer.readFile(filePath);
+}
+
+string sendText() {
+    return viewLayer.sendTextDisplay();
+}
+
 int main() {
     // 0. user gives data to be sent
-    ViewLayer viewLayer;
     viewLayer.introDisplay();
-    // viewLayer.mainDisplay();
 
-    DataLayer dataLayer;
-    string data = dataLayer.readFile("../plain.txt");
+    int chosenOption = -1;
+    while (chosenOption) {
+        chosenOption = viewLayer.optionsDisplay();
+        string data;
 
-    string targetFile = "copy.txt";
-    if (data != "") {
-        dataLayer.writeFile(FILE_ROOT + targetFile, data);
+        // possible command layer? lmao
+        switch (chosenOption) {
+            case 0:
+                cout << "Terminating\n";
+                return 0;
+            case 1:
+                data = sendFile();
+                break;
+            case 2:
+                data = sendText();
+                break;
+            default:
+                cout << "Invalid option\n"; 
+        }
+
+    // 1. Data is encrypted
+        if (data != "") {
+
+        }
+
+    // 2. Data is sent
     }
-
-    // 1. program encrypts file
-
-    // 2. program sends encrypted data
-
     return 0;
 }
