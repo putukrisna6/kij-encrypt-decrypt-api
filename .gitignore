@@ -30,3 +30,7 @@
 *.exe
 *.out
 *.app
+
+# Custom
+src/main
+files/
