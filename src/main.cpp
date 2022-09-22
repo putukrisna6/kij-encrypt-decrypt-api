@@ -28,6 +28,16 @@ DataLayer dataLayer;
 ViewLayer viewLayer;
 Encryption *encryption;    
 
+void __instantiateEncryption(int chosenAlgo) {
+    switch (chosenAlgo) {
+        case ALGO_COBA:
+            encryption = new CobaCoba();
+            break;
+        default:
+            throw runtime_error("invalid option"); 
+    }
+}
+
 string sendFile() {
     string filePath = viewLayer.sendFileDisplay();
     return dataLayer.readFile(filePath);
@@ -49,22 +59,22 @@ void sendDataFlow() {
             plainText = sendText();
             break;
         default:
-            cout << "Invalid option\n"; 
+            throw runtime_error("invalid option"); 
     }
 
     int chosenAlgo = viewLayer.algoOptionsDisplay();
-
-    switch (chosenAlgo) {
-        case ALGO_COBA:
-            encryption = new CobaCoba();
-            break;
-        default:
-            cout << "Invalid option\n"; 
-    }
+    __instantiateEncryption(chosenAlgo);
 
     string cipherText = encryption->encrypt(plainText);
 
     Client client;
+
+    // Send Encryption Type
+    client.clientTransmit(to_string(chosenAlgo));
+    client.clientListen();
+    cout << client.getBuffer() << endl;
+    
+    // Send Encrypted Message
     client.clientTransmit(cipherText);
     client.clientListen();
     cout << client.getBuffer() << endl;
@@ -76,12 +86,19 @@ void sendDataFlow() {
 void receiveDataFlow() {
     Server server;
     
+    // Get Encryption Type
+    server.serverListen();
+    string algo = server.getBuffer(); 
+    __instantiateEncryption(stoi(algo));
+    server.serverTransmit(algo);
+    
     server.serverListen();
     const char *tmp = server.getBuffer();
     std::string cipherText(tmp);
     cout << cipherText << endl;
-    
     server.serverTransmit("Server Received Message");
+
+    cout << encryption->decrypt(cipherText) << endl;
 
     server.serverEnd();
 }
