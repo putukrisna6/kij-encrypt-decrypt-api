@@ -22,41 +22,11 @@ class Server
         char buffer[BUFFER_SIZE] = { 0 };
         bool isListen;
 
-        void __listen() {
-            try {
-                if (!isListen) {
-                    throw std::logic_error("not allowed to listen");
-                }
-
-                this->valread = read(this->new_socket, this->buffer, BUFFER_SIZE);
-            } catch (const std::exception& e) {
-                std::cout << e.what() << std::endl;
-            }
-            isListen = false;
-        }
-
-        void __transmit(std::string message) {
-            try {
-                if (isListen) {
-                    throw std::logic_error("not allowed to transmit");
-                }
-
-                send(this->new_socket, message.c_str(), strlen(message.c_str()), 0);
-            } catch (const std::exception& e) {
-                std::cout << e.what() << std::endl;
-            }
-            isListen = true;
-        }
-
-        void __close() {
-            close(this->new_socket);
-            shutdown(this->server_fd, SHUT_RDWR);
-        }
-
     public:
         Server() {
             this->opt = 1;
             this->addrlen = sizeof(address);
+            // Servers should listen first
             this->isListen = true;
 
             // Creating socket file descriptor
@@ -90,19 +60,42 @@ class Server
             }
         }
 
-        void maintainConnection() {
-           __listen();
-            printf("%s\n", this->buffer);
-            __listen();
-            __transmit("hello dari server");
-            __transmit("hello dari server lagi");
+        ~Server() {
+            serverEnd();
+        }
 
-            __close();
+        char* getBuffer() {
+            return this->buffer;
+        }
+
+        void serverListen() {
+            try {
+                if (!isListen) {
+                    throw std::logic_error("not allowed to listen");
+                }
+
+                this->valread = read(this->new_socket, this->buffer, BUFFER_SIZE);
+            } catch (const std::exception& e) {
+                std::cout << e.what() << std::endl;
+            }
+            isListen = false;
+        }
+
+        void serverTransmit(std::string message) {
+            try {
+                if (isListen) {
+                    throw std::logic_error("not allowed to transmit");
+                }
+
+                send(this->new_socket, message.c_str(), strlen(message.c_str()), 0);
+            } catch (const std::exception& e) {
+                std::cout << e.what() << std::endl;
+            }
+            isListen = true;
+        }
+
+        void serverEnd() {
+            close(this->new_socket);
+            shutdown(this->server_fd, SHUT_RDWR);
         }
 };
-
-int main(int argc, char const* argv[]) {
-    Server server;
-    server.maintainConnection();
-    return 0;
-}
