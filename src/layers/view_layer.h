@@ -14,9 +14,31 @@ class ViewLayer
 
         int optionsDisplay() {
             cout << "\nAvailable options:\n";
-            cout << "\t1. Send file\n";
-            cout << "\t2. Send text\n";
+            cout << "\t1. Send\n";
+            cout << "\t2. Receive\n";
             cout << "\t0. Exit\n";
+
+            int chosenOption;
+            cin >> chosenOption;
+            return chosenOption;
+        }
+
+        int algoOptionsDisplay() {
+            cout << "\nChoose encryption algorithm:\n";
+            cout << "\t1. AES\n";
+            cout << "\t2. RC4\n";
+            cout << "\t3. DES\n";
+            cout << "\t4. CobaCoba\n";
+
+            int chosenOption;
+            cin >> chosenOption;
+            return chosenOption;
+        }
+
+        int messageOptionsDisplay() {
+            cout << "\nChoose what to send:\n";
+            cout << "\t1. File\n";
+            cout << "\t2. Text\n";
 
             int chosenOption;
             cin >> chosenOption;
