@@ -3,6 +3,6 @@
 class Encryption
 {
     public:
-        virtual std::string encrypt(std::string plainText) = 0;
-        virtual std::string decrypt(std::string cipherText) = 0;
+        virtual string encrypt(string plainText) = 0;
+        virtual string decrypt(string cipherText) = 0;
 };
