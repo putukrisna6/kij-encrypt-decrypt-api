@@ -34,3 +34,5 @@
 # Custom
 src/main
 files/
+src/client
+src/server
