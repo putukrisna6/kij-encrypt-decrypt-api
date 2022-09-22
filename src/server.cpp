@@ -4,8 +4,11 @@
 #include <string.h>
 #include <sys/socket.h>
 #include <unistd.h>
+#include <iostream>
+#include <exception>
 
 #define PORT 8080
+#define BUFFER_SIZE 1024
 
 class Server
 {
@@ -16,12 +19,45 @@ class Server
             opt, \
             addrlen;
         struct sockaddr_in address;
-        char buffer[1024] = { 0 };
+        char buffer[BUFFER_SIZE] = { 0 };
+        bool isListen;
+
+        void __listen() {
+            try {
+                if (!isListen) {
+                    throw std::logic_error("not allowed to listen");
+                }
+
+                this->valread = read(this->new_socket, this->buffer, BUFFER_SIZE);
+            } catch (const std::exception& e) {
+                std::cout << e.what() << std::endl;
+            }
+            isListen = false;
+        }
+
+        void __transmit(std::string message) {
+            try {
+                if (isListen) {
+                    throw std::logic_error("not allowed to transmit");
+                }
+
+                send(this->new_socket, message.c_str(), strlen(message.c_str()), 0);
+            } catch (const std::exception& e) {
+                std::cout << e.what() << std::endl;
+            }
+            isListen = true;
+        }
+
+        void __close() {
+            close(this->new_socket);
+            shutdown(this->server_fd, SHUT_RDWR);
+        }
 
     public:
         Server() {
             this->opt = 1;
             this->addrlen = sizeof(address);
+            this->isListen = true;
 
             // Creating socket file descriptor
             if ((this->server_fd = socket(AF_INET, SOCK_STREAM, 0)) < 0) {
@@ -52,20 +88,21 @@ class Server
                 perror("accept failed");
                 exit(EXIT_FAILURE);
             }
+        }
 
-            this->valread = read(this->new_socket, this->buffer, 1024);
+        void maintainConnection() {
+           __listen();
             printf("%s\n", this->buffer);
-            send(this->new_socket, "hello server", strlen("hello server"), 0);
-            printf("Hello message sent\n");
-        
-            // closing the connected socket
-            close(this->new_socket);
-            // closing the listening socket
-            shutdown(this->server_fd, SHUT_RDWR);
+            __listen();
+            __transmit("hello dari server");
+            __transmit("hello dari server lagi");
+
+            __close();
         }
 };
 
 int main(int argc, char const* argv[]) {
     Server server;
+    server.maintainConnection();
     return 0;
 }
