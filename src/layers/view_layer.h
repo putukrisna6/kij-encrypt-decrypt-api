@@ -59,7 +59,8 @@ class ViewLayer
             cout << "\tText content: ";
             
             string data;
-            cin >> data;
+            getchar();
+            getline(cin, data);
             return data;
         }
 };

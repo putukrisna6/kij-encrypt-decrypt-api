@@ -26,6 +26,7 @@
 // Global
 DataLayer dataLayer;
 ViewLayer viewLayer;
+Encryption *encryption;    
 
 string sendFile() {
     string filePath = viewLayer.sendFileDisplay();
@@ -52,7 +53,6 @@ void sendDataFlow() {
     }
 
     int chosenAlgo = viewLayer.algoOptionsDisplay();
-    Encryption *encryption;    
 
     switch (chosenAlgo) {
         case ALGO_COBA:
@@ -75,8 +75,12 @@ void sendDataFlow() {
 
 void receiveDataFlow() {
     Server server;
+    
     server.serverListen();
-    cout << server.getBuffer() << endl;
+    const char *tmp = server.getBuffer();
+    std::string cipherText(tmp);
+    cout << cipherText << endl;
+    
     server.serverTransmit("Server Received Message");
 
     server.serverEnd();

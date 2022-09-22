@@ -1,7 +1,7 @@
 class CobaCoba : public Encryption
 {
     public:
-        std::string encrypt(std::string plainText) {
+        string encrypt(string plainText) {
             int counter = 0;
             for (char c : plainText) {
                 plainText[counter] = c + 1;
@@ -10,7 +10,7 @@ class CobaCoba : public Encryption
             return plainText;
         }
 
-        std::string decrypt(std::string cipherText) {
+        string decrypt(string cipherText) {
             int counter = 0;
             for (char c : cipherText) {
                 cipherText[counter] = c - 1;
