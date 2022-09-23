@@ -8,12 +8,12 @@ using namespace std;
 class ARC4: public Encryption {
     public:
         ARC4(string staticKey) {
-            int keyLength = staticKey.length();
+            size_t keyLength = staticKey.length();
 
             // keyLength + 1 to handle null
             unsigned char key[keyLength + 1];
 
-            for(int i = 0; i < keyLength; i++) {
+            for(size_t i = 0; i < keyLength; i++) {
                 key[i] = (unsigned char) staticKey[i];
             }
             key[keyLength] = '\0';
@@ -45,17 +45,17 @@ class ARC4: public Encryption {
             int b;
             int x = this->x;
             int y = this->y;
-            int plainTextLength = plainText.length();
+            size_t plainTextLength = plainText.length();
             vector<int> stateVectorCopy = this->stateVector;
             unsigned char tmp[plainTextLength + 1];
 
-            for(int i = 0; i < plainTextLength; i++) {
+            for(size_t i = 0; i < plainTextLength; i++) {
                 tmp[i] = (unsigned char) plainText[i];
             }
             tmp[plainTextLength] = '\0';
 
 
-            for (int i = 0; i < plainTextLength; i++) {
+            for (size_t i = 0; i < plainTextLength; i++) {
                 x = (unsigned char)(x + 1);
                 a = stateVectorCopy[x];
                 y = (unsigned char)(y + a);
@@ -65,7 +65,7 @@ class ARC4: public Encryption {
             }
 
             string result = "";
-            for(int i = 0; i < plainTextLength; i++) {
+            for(size_t i = 0; i < plainTextLength; i++) {
                 result += tmp[i];
             }
 
