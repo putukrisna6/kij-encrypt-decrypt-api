@@ -11,6 +11,7 @@
 
 #include "algorithms/encryption.h"
 #include "algorithms/coba_coba.h"
+#include "algorithms/rc4.h"
 
 // Constants
 #define FILE_ROOT "../files/"
@@ -26,15 +27,19 @@
 // Global
 DataLayer dataLayer;
 ViewLayer viewLayer;
-Encryption *encryption;    
+Encryption *encryption;
+const string key = "I_AM_A_KEY";
 
 void __instantiateEncryption(int chosenAlgo) {
     switch (chosenAlgo) {
         case ALGO_COBA:
             encryption = new CobaCoba();
             break;
+        case ALGO_RC4:
+            encryption = new ARC4(key);
+            break;
         default:
-            throw runtime_error("invalid option"); 
+            throw runtime_error("invalid option");
     }
 }
 
@@ -59,7 +64,7 @@ void sendDataFlow() {
             plainText = sendText();
             break;
         default:
-            throw runtime_error("invalid option"); 
+            throw runtime_error("invalid option");
     }
 
     int chosenAlgo = viewLayer.algoOptionsDisplay();
@@ -73,7 +78,7 @@ void sendDataFlow() {
     client.clientTransmit(to_string(chosenAlgo));
     client.clientListen();
     cout << client.getBuffer() << endl;
-    
+
     // Send Encrypted Message
     client.clientTransmit(cipherText);
     client.clientListen();
@@ -85,13 +90,13 @@ void sendDataFlow() {
 
 void receiveDataFlow() {
     Server server;
-    
+
     // Get Encryption Type
     server.serverListen();
-    string algo = server.getBuffer(); 
+    string algo = server.getBuffer();
     __instantiateEncryption(stoi(algo));
     server.serverTransmit(algo);
-    
+
     server.serverListen();
     const char *tmp = server.getBuffer();
     std::string cipherText(tmp);
@@ -125,6 +130,6 @@ int main() {
         default:
             cout << "Invalid option\n";
     }
-    
+
     return 0;
 }
