@@ -1,6 +1,7 @@
 #include <iostream>
 #include <unordered_map>
 #include <bitset>
+#include <math.h>
 
 using namespace std;
 
@@ -64,12 +65,24 @@ string hexToBin(string s)
     return bin;
 }
 
-string stringToBinary(string s) {
+string stringToBinary(string s) 
+{
     string bin = "";
     for (char& _char : s) {
         bin +=bitset<8>(_char).to_string();
     }
     return bin;
+}
+
+string decimalToBinary(unsigned int d) 
+{
+    int n = (int)(log2(d));
+    return bitset<64>(d).to_string().substr(64 - n - 1);
+}
+
+int binaryToDecimal(string d) 
+{
+    return stoi(d, 0, 2);
 }
 
 string shiftLeft(string s, int shifts)
@@ -90,6 +103,20 @@ string shiftLeft(string s, int shifts)
     }
 
     return res;
+}
+
+string XOR(string a, string b)
+{
+    string res = "";
+    for (int i = 0; i < a.size(); i++) {
+        res += (a[i] == b[i]) ? "0" : "1";
+    }
+    return res;
+}
+
+string convertToString(char *a) {
+    string s = a;
+    return a;
 }
 
 #endif

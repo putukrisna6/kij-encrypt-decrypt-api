@@ -8,6 +8,8 @@ typedef unsigned short int usi;
 
 class DES : public Encryption
 {
+    // TODO: Handle string as encryption input
+    // TODO: Handle file as encryption input
     public:
         // Key is expected to be in hexadecimal
         DES(string key) {
@@ -16,11 +18,31 @@ class DES : public Encryption
         }
 
         string encrypt(string plainText) {
-            return "da02ce3a89ecac3b";
+            log("Encryption:\n");
+
+            string cipherText = __encrypt(plainText, encryptionRoundKeys);
+            cipherText = binToHex(cipherText);
+            log("\nCipher Text: " + cipherText + "\n");
+
+            return cipherText;
         }
 
         string decrypt(string cipherText) {
-            return "02468aceeca86420";
+            log("Decryption:\n");
+
+            string plainText = __encrypt(cipherText, decryptionRoundKeys);
+            plainText = binToHex(plainText);
+            log("\Plain Text: " + plainText + "\n");
+
+            return plainText;
+        }
+
+        bool getLog() {
+            return logIsActive;
+        }
+
+        void setLog(bool log) {
+            logIsActive = log;
         }
 
     private:
@@ -28,54 +50,12 @@ class DES : public Encryption
          * Variables
          *********************************************************************/
         string bin64Key;
-        vector<string> roundKeys; // in binary
+        vector<string> encryptionRoundKeys; // in binary
+        vector<string> decryptionRoundKeys; // in binary
+        bool logIsActive;
 
         /* number of bits to shift on key for each round */
         const int ls[16] = { 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1 };
-
-        /* initial permutation */
-        const usi ip[64] = {
-            58, 50, 42, 34, 26, 18, 10,  2,
-            60, 52, 44, 36, 28, 20, 12,  4,
-            62, 54, 46, 38, 30, 22, 14,  6,
-            64, 56, 48, 40, 32, 24, 16,  8,
-            57, 49, 41, 33, 25, 17,  9,  1,
-            59, 51, 43, 35, 27, 19, 11,  3,
-            61, 53, 45, 37, 29, 21, 13,  5,
-            63, 55, 47, 39, 31, 23, 15,  7
-        };
-
-        /* p-box */
-        const usi pb[32] = {
-            16,  7, 20, 21, 29, 12, 28, 17,
-            1, 15, 23, 26, 5, 18, 31, 10,
-            2,  8, 24, 14, 32, 27,  3,  9,
-            19, 13, 30,  6, 22, 11,  4, 25
-        };
-
-        /* final permutation */
-        const usi fp[64] = {
-            40,  8, 48, 16, 56, 24, 64, 32,
-            39,  7, 47, 15, 55, 23, 63, 31,
-            38,  6, 46, 14, 54, 22, 62, 30,
-            37,  5, 45, 13, 53, 21, 61, 29,
-            36,  4, 44, 12, 52, 20, 60, 28,
-            35,  3, 43, 11, 51, 19, 59, 27,
-            34,  2, 42, 10, 50, 18, 58, 26,
-            33,  1, 41,  9, 49, 17, 57, 25
-        };
-
-        /* expansion table*/
-        const usi ei[48] = {
-            32,  1,  2,  3,  4,  5,
-            4,  5,  6,  7,  8,  9,
-            8,  9, 10, 11, 12, 13,
-            12, 13, 14, 15, 16, 17,
-            16, 17, 18, 19, 20, 21,
-            20, 21, 22, 23, 24, 25,
-            24, 25, 26, 27, 28, 29,
-            28, 29, 30, 31, 32,  1
-        };
 
         /* permuted choice table for create bin56Key */
         const usi pc1[56] = {
@@ -99,6 +79,30 @@ class DES : public Encryption
             30, 40, 51, 45, 33, 48,
             44, 49, 39, 56, 34, 53,
             46, 42, 50, 36, 29, 32
+        };
+
+        /* initial permutation */
+        const usi ip[64] = {
+            58, 50, 42, 34, 26, 18, 10,  2,
+            60, 52, 44, 36, 28, 20, 12,  4,
+            62, 54, 46, 38, 30, 22, 14,  6,
+            64, 56, 48, 40, 32, 24, 16,  8,
+            57, 49, 41, 33, 25, 17,  9,  1,
+            59, 51, 43, 35, 27, 19, 11,  3,
+            61, 53, 45, 37, 29, 21, 13,  5,
+            63, 55, 47, 39, 31, 23, 15,  7
+        };
+
+        /* expansion permutation table*/
+        const usi ep[48] = {
+            32,  1,  2,  3,  4,  5,
+            4,  5,  6,  7,  8,  9,
+            8,  9, 10, 11, 12, 13,
+            12, 13, 14, 15, 16, 17,
+            16, 17, 18, 19, 20, 21,
+            20, 21, 22, 23, 24, 25,
+            24, 25, 26, 27, 28, 29,
+            28, 29, 30, 31, 32,  1
         };
 
         /* s-box */
@@ -153,19 +157,132 @@ class DES : public Encryption
             }
         };
 
+        /* p-box */
+        const usi pb[32] = {
+            16,  7, 20, 21, 29, 12, 28, 17,
+            1, 15, 23, 26, 5, 18, 31, 10,
+            2,  8, 24, 14, 32, 27,  3,  9,
+            19, 13, 30,  6, 22, 11,  4, 25
+        };
+
+        /* final permutation */
+        const usi fp[64] = {
+            40,  8, 48, 16, 56, 24, 64, 32,
+            39,  7, 47, 15, 55, 23, 63, 31,
+            38,  6, 46, 14, 54, 22, 62, 30,
+            37,  5, 45, 13, 53, 21, 61, 29,
+            36,  4, 44, 12, 52, 20, 60, 28,
+            35,  3, 43, 11, 51, 19, 59, 27,
+            34,  2, 42, 10, 50, 18, 58, 26,
+            33,  1, 41,  9, 49, 17, 57, 25
+        };
+
 
         /**********************************************************************
          * Functions
          **********************************************************************/
 
+        string __encrypt(string plainText, vector<string>roundKeys) {
+            // Initial permutation
+            string binPT = hexToBin(plainText); 
+            binPT = permute(binPT, ip, 64);
+            log("After initial permutation: " + binToHex(binPT));
+
+            // Splitting
+            string left = binPT.substr(0, 32);
+            string right = binPT.substr(32, 32);
+            log(
+                "After splitting: " + 
+                "LPT=" + binToHex(left) + " "
+                "RPT=" + binToHex(right) + "\n"
+            );
+
+            // 16 Rounds of DES functions
+            for (usi i = 0; i < 16; i++) {
+                // Expansion Permutation
+                string RPT = permute(right, ep, 48);
+                RPT = XOR(roundKeys[i], RPT);
+
+                // S-box Permutation
+                RPT = sBoxPermutation(RPT);
+
+                // P-box Permutation
+                RPT = permute(RPT, pb, 32);
+
+                // XOR RPT with original LPT in current round
+                RPT = XOR(RPT, left);
+
+                // Swap left and right part
+                left = RPT;
+                if (i < 15) {
+                    string temp = right;
+                    right = left;
+                    left = right;
+                }
+
+                char buffer[64];
+                sprintf(
+                    buffer, "Round %02d | %s | %s | %s", (i + 1), 
+                    binToHex(left), binToHex(right), binToHex(roundKeys[i])
+                );
+                log(convertToString(buffer));
+            }
+
+            // Final Permutation
+            return permute(left + right, fp, 64);
+        }
+
+        void log(string str) {
+            if (!logIsActive) {
+                return;
+            }
+
+            time_t currTime;
+            tm * currTm;
+            char formatedTime[100];
+
+            time(&currTime);
+            currTm = localtime(&currTime);
+            strftime(formatedTime, 50, "Current time is %T", currTm);
+
+            printf("%s - %s\n", formatedTime, str);
+        }
+
         /**
-         * @brief Change 'k' order based on array 'arr' containing 'n' elements.
+         * @brief Do S-Box permutation.
+         * 
+         * @param xepRight Result of XOR operation between
+        *                  48-bit round key with 48-bit expanded RPT.
+         * @return string 
+         */
+        string sBoxPermutation(string xepRight) {
+            string result = "";
+
+            // Divide into 8 blocks.
+            for (usi i = 0; i < 8; i++) {
+                int startIndex = i * 6;
+
+                // Determine row in s-box Table;
+                string outerBits = convertToString(&xepRight[startIndex]) + xepRight[startIndex + 5];
+                int row = binaryToDecimal(outerBits);
+
+                // Determine col in s-box Table;
+                string middleBits = xepRight.substr(startIndex + 1, 4);
+                int col = binaryToDecimal(middleBits);
+                
+                result += decimalToBinary(sb[i][row][col]);
+            }
+            return result;
+        }
+
+        /**
+         * @brief Reorder elements in 'k' based on array 'arr' containing 'n' elements.
          * 
          * First element in 'res' is equal to 'k[i]', where 'i' is 
          * equal to first element of 'arr'.
          * 
-         * @param k Array of byte that want to be remap.
-         * @param arr Permutation table that store remapping rule.
+         * @param k Array of byte that want to be reordered.
+         * @param arr Permutation table that store reorder rule.
          * @param n Store how many elements does arr contains.
          * @return string
          */
@@ -185,7 +302,8 @@ class DES : public Encryption
             string left = bin56Key.substr(0, 28);
             string right = bin56Key.substr(28, 28);
 
-            for (int i = 0; i < 16; i++) {
+            // Set encryption round keys.
+            for (usi i = 0; i < 16; i++) {
                 left = shiftLeft(left, ls[i]);
                 right = shiftLeft(right, ls[i]);
         
@@ -193,7 +311,12 @@ class DES : public Encryption
         
                 string roundKey = permute(combine, pc2, 48);
         
-                roundKeys.push_back(roundKey);
+                encryptionRoundKeys.push_back(roundKey);
+            }
+
+            // Set decryption round keys.
+            for (usi i = 15; i >= 0; i--) {
+                decryptionRoundKeys.push_back(encryptionRoundKeys[i]);
             }
         }
 };
