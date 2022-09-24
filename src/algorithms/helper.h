@@ -77,10 +77,24 @@ string stringToBinary(string s)
     return bin;
 }
 
+string stringToUppercase(string s) {
+    for (size_t i = 0; i < s.length(); i++) {
+        if (!isalpha(s[i]) || isupper(s[i])) {
+            continue;
+        }
+        s[i] = toupper(s[i]);
+    }
+    return s;
+}
+
 string decimalToBinary(unsigned int d)
 {
-    int n = (d == 0) ? 0 : (int)(log2(d));
-    return bitset<64>(d).to_string().substr(64 - n - 1);
+    string res = "";
+    while (d > 0) {
+        res = to_string(d % 2) + res;
+        d /= 2;
+    }
+    return res;
 }
 
 unsigned int binaryToDecimal(string d)

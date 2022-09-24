@@ -9,13 +9,13 @@ typedef unsigned short int usi;
 class DES : public Encryption
 {
     // TODO: Handle string as encryption input
-    // TODO: Handle file as encryption input
     // TODO: Add sanity check for input (key, plaintext, ciphertext)
+    // TODO: Handle file as encryption input
 public:
     // Key is expected to be in hexadecimal
     DES(string key)
     {
-        bin64Key = hexToBin(key);
+        bin64Key = hexToBin(stringToUppercase(key));
         generateRoundKeys();
     }
 
@@ -23,10 +23,12 @@ public:
     {
         log("Encryption:\n");
 
-        string cipherText = __encrypt(plainText, encryptionRoundKeys);
+        string cipherText = __encrypt(
+            stringToUppercase(plainText), encryptionRoundKeys
+        );
         cipherText = binToHex(cipherText);
         log("--------------------------------------------");
-        log("Cipher Text: " + cipherText + "\n");
+        log("Ciphertext: " + cipherText + "\n");
 
         return cipherText;
     }
@@ -35,10 +37,13 @@ public:
     {
         log("Decryption:\n");
 
-        string plainText = __encrypt(cipherText, decryptionRoundKeys);
+        string plainText = __encrypt(
+            stringToUppercase(cipherText), 
+            decryptionRoundKeys
+        );
         plainText = binToHex(plainText);
         log("--------------------------------------------");
-        log("Plain Text: " + plainText + "\n");
+        log("Plaintext: " + plainText + "\n");
 
         return plainText;
     }
@@ -212,9 +217,7 @@ private:
             left = RPT;
             if (i < 15)
             {
-                string temp = right;
-                right = left;
-                left = right;
+                swap(left, right);
             }
 
             char buffer[64];
@@ -271,7 +274,12 @@ private:
             string middleBits = xepRight.substr(startIndex + 1, 4);
             int col = binaryToDecimal(middleBits);
 
-            result += decimalToBinary(sb[i][row][col]);
+            // Val must be a 4-bit string
+            string val = decimalToBinary(sb[i][row][col]);
+            for (int j = val.length(); j < 4; j++) {
+                val = "0" + val;
+            }
+            result += val;
         }
         return result;
     }
