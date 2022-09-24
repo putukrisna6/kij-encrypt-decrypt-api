@@ -30,8 +30,7 @@ string binToHex(string s)
     mp["1111"] = "F";
 
     string hex = "";
-    for (size_t i = 0; i < s.length(); i += 4)
-    {
+    for (size_t i = 0; i < s.length(); i += 4) {
         string ch = s.substr(i, 4);
         hex += mp[ch];
     }
@@ -60,8 +59,7 @@ string hexToBin(string s)
     mp['F'] = "1111";
 
     string bin = "";
-    for (size_t i = 0; i < s.length(); i++)
-    {
+    for (size_t i = 0; i < s.length(); i++) {
         bin += mp[s[i]];
     }
     return bin;
@@ -70,14 +68,14 @@ string hexToBin(string s)
 string stringToBinary(string s)
 {
     string bin = "";
-    for (char &_char : s)
-    {
+    for (char &_char : s) {
         bin += bitset<8>(_char).to_string();
     }
     return bin;
 }
 
-string stringToUppercase(string s) {
+string stringToUppercase(string s)
+{
     for (size_t i = 0; i < s.length(); i++) {
         if (!isalpha(s[i]) || isupper(s[i])) {
             continue;
@@ -106,8 +104,7 @@ string shiftLeft(string s, int shifts)
 {
     size_t length = s.length();
 
-    if (shifts % length == 0)
-    {
+    if (shifts % length == 0) {
         return s;
     }
 
@@ -126,8 +123,7 @@ string shiftLeft(string s, int shifts)
 string XOR(string a, string b)
 {
     string res = "";
-    for (int i = 0; i < a.size(); i++)
-    {
+    for (int i = 0; i < a.size(); i++) {
         res += (a[i] == b[i]) ? "0" : "1";
     }
     return res;
