@@ -6,9 +6,9 @@ using namespace std;
 
 int main() 
 {
-    string key = "0f1571c947d9e859";
-    string plainText = "02468aceeca86420";
-    string expectedCipherText = "da02ce3a89ecac3b";
+    string key = "AABB09182736CCDD";
+    string plainText = "123456ABCD132536";
+    string expectedCipherText = "C0B7A8D05F3A829C";
 
     Encryption *des = new DES(key);
 

@@ -1,5 +1,6 @@
 #include "encryption.h"
-#include "des_import.h"
+#include "helper.h"
+#include <vector>
 
 using namespace std;
 
@@ -8,8 +9,10 @@ typedef unsigned short int usi;
 class DES : public Encryption
 {
     public:
+        // Key is expected to be in hexadecimal
         DES(string key) {
-            this->key = key;
+            bin64Key = hexToBin(key);
+            generateRoundKeys();
         }
 
         string encrypt(string plainText) {
@@ -21,7 +24,11 @@ class DES : public Encryption
         }
 
     private:
-        string key;
+        /*********************************************************************
+         * Variables
+         *********************************************************************/
+        string bin64Key;
+        vector<string> roundKeys; // in binary
 
         /* number of bits to shift on key for each round */
         const int ls[16] = { 1, 1, 2, 2, 2, 2, 2, 2, 1, 2, 2, 2, 2, 2, 2, 1 };
@@ -70,13 +77,12 @@ class DES : public Encryption
             28, 29, 30, 31, 32,  1
         };
 
-        /* permuted choice table for making LPT and RPT */
+        /* permuted choice table for create bin56Key */
         const usi pc1[56] = {
             57, 49, 41, 33, 25, 17,  9,
             1, 58, 50, 42, 34, 26, 18,
             10,  2, 59, 51, 43, 35, 27,
             19, 11,  3, 60, 52, 44, 36,
-
             63, 55, 47, 39, 31, 23, 15,
             7, 62, 54, 46, 38, 30, 22,
             14,  6, 61, 53, 45, 37, 29,
@@ -147,5 +153,47 @@ class DES : public Encryption
             }
         };
 
+
+        /**********************************************************************
+         * Functions
+         **********************************************************************/
+
+        /**
+         * @brief Change 'k' order based on array 'arr' containing 'n' elements.
+         * 
+         * First element in 'res' is equal to 'k[i]', where 'i' is 
+         * equal to first element of 'arr'.
+         * 
+         * @param k Array of byte that want to be remap.
+         * @param arr Permutation table that store remapping rule.
+         * @param n Store how many elements does arr contains.
+         * @return string
+         */
+        string permute(string k, const usi *arr, usi n) {
+            string res = "";
+            for (usi i = 0; i < n; i++) {
+                res += k[arr[i] - 1];
+            }
+            return res;
+        }
+
+        /**
+         * @brief Generate keys for each of the 16 DES rounds.
+         */
+        void generateRoundKeys() {
+            string bin56Key = permute(bin64Key, pc1, 56);
+            string left = bin56Key.substr(0, 28);
+            string right = bin56Key.substr(28, 28);
+
+            for (int i = 0; i < 16; i++) {
+                left = shiftLeft(left, ls[i]);
+                right = shiftLeft(right, ls[i]);
         
+                string combine = left + right;
+        
+                string roundKey = permute(combine, pc2, 48);
+        
+                roundKeys.push_back(roundKey);
+            }
+        }
 };
