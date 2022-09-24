@@ -30,7 +30,8 @@ string binToHex(string s)
     mp["1111"] = "F";
 
     string hex = "";
-    for (size_t i = 0; i < s.length(); i += 4) {
+    for (size_t i = 0; i < s.length(); i += 4)
+    {
         string ch = s.substr(i, 4);
         hex += mp[ch];
     }
@@ -59,28 +60,30 @@ string hexToBin(string s)
     mp['F'] = "1111";
 
     string bin = "";
-    for (size_t i = 0; i < s.length(); i++) {
+    for (size_t i = 0; i < s.length(); i++)
+    {
         bin += mp[s[i]];
     }
     return bin;
 }
 
-string stringToBinary(string s) 
+string stringToBinary(string s)
 {
     string bin = "";
-    for (char& _char : s) {
-        bin +=bitset<8>(_char).to_string();
+    for (char &_char : s)
+    {
+        bin += bitset<8>(_char).to_string();
     }
     return bin;
 }
 
-string decimalToBinary(unsigned int d) 
+string decimalToBinary(unsigned int d)
 {
     int n = (d == 0) ? 0 : (int)(log2(d));
     return bitset<64>(d).to_string().substr(64 - n - 1);
 }
 
-unsigned int binaryToDecimal(string d) 
+unsigned int binaryToDecimal(string d)
 {
     return stoi(d, 0, 2);
 }
@@ -89,16 +92,17 @@ string shiftLeft(string s, int shifts)
 {
     size_t length = s.length();
 
-    if (shifts % length == 0) {
+    if (shifts % length == 0)
+    {
         return s;
     }
 
     string res = "";
     for (
-        size_t j = 0, currIndex = shifts % length; 
-        j < length - 1; 
-        j++, currIndex = (currIndex + 1) % length
-    ) {
+        size_t j = 0, currIndex = shifts % length;
+        j < length;
+        j++, currIndex = (currIndex + 1) % length)
+    {
         res += s[currIndex];
     }
 
@@ -108,13 +112,15 @@ string shiftLeft(string s, int shifts)
 string XOR(string a, string b)
 {
     string res = "";
-    for (int i = 0; i < a.size(); i++) {
+    for (int i = 0; i < a.size(); i++)
+    {
         res += (a[i] == b[i]) ? "0" : "1";
     }
     return res;
 }
 
-string convertToString(char *a) {
+string convertToString(char *a)
+{
     string s = a;
     return a;
 }

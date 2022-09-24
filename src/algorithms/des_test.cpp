@@ -4,13 +4,14 @@
 
 using namespace std;
 
-int main() 
+int main()
 {
     string key = "AABB09182736CCDD";
     string plainText = "123456ABCD132536";
     string expectedCipherText = "C0B7A8D05F3A829C";
 
-    Encryption *des = new DES(key);
+    DES *des = new DES(key);
+    des->setLog(true);
 
     string cipherText = des->encrypt(plainText);
     cout << "Ciphertext: " + cipherText << endl;
