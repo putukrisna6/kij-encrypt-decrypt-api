@@ -32,7 +32,7 @@ class DES : public Encryption
 
             string plainText = __encrypt(cipherText, decryptionRoundKeys);
             plainText = binToHex(plainText);
-            log("\Plain Text: " + plainText + "\n");
+            log("Plain Text: " + plainText + "\n");
 
             return plainText;
         }
@@ -191,13 +191,15 @@ class DES : public Encryption
             // Splitting
             string left = binPT.substr(0, 32);
             string right = binPT.substr(32, 32);
-            log(
-                "After splitting: " + 
-                "LPT=" + binToHex(left) + " "
-                "RPT=" + binToHex(right) + "\n"
+            char buffer[64];
+            snprintf(buffer, 64,
+                "After splitting: LPT=%s RPT=%s\n", 
+                binToHex(left).c_str(), binToHex(right).c_str()
             );
+            log(convertToString(buffer));
 
             // 16 Rounds of DES functions
+            log("Round XX | LPT | RPT | Round Keys");
             for (usi i = 0; i < 16; i++) {
                 // Expansion Permutation
                 string RPT = permute(right, ep, 48);
@@ -223,7 +225,8 @@ class DES : public Encryption
                 char buffer[64];
                 sprintf(
                     buffer, "Round %02d | %s | %s | %s", (i + 1), 
-                    binToHex(left), binToHex(right), binToHex(roundKeys[i])
+                    binToHex(left).c_str(), binToHex(right).c_str(), 
+                    binToHex(roundKeys[i]).c_str()
                 );
                 log(convertToString(buffer));
             }
@@ -245,7 +248,7 @@ class DES : public Encryption
             currTm = localtime(&currTime);
             strftime(formatedTime, 50, "Current time is %T", currTm);
 
-            printf("%s - %s\n", formatedTime, str);
+            printf("%s - %s\n", formatedTime, str.c_str());
         }
 
         /**
@@ -263,7 +266,7 @@ class DES : public Encryption
                 int startIndex = i * 6;
 
                 // Determine row in s-box Table;
-                string outerBits = convertToString(&xepRight[startIndex]) + xepRight[startIndex + 5];
+                string outerBits = string(1, xepRight[startIndex]) + xepRight[startIndex + 5];
                 int row = binaryToDecimal(outerBits);
 
                 // Determine col in s-box Table;
@@ -315,7 +318,7 @@ class DES : public Encryption
             }
 
             // Set decryption round keys.
-            for (usi i = 15; i >= 0; i--) {
+            for (int i = 15; i >= 0; i--) {
                 decryptionRoundKeys.push_back(encryptionRoundKeys[i]);
             }
         }

@@ -76,11 +76,11 @@ string stringToBinary(string s)
 
 string decimalToBinary(unsigned int d) 
 {
-    int n = (int)(log2(d));
+    int n = (d == 0) ? 0 : (int)(log2(d));
     return bitset<64>(d).to_string().substr(64 - n - 1);
 }
 
-int binaryToDecimal(string d) 
+unsigned int binaryToDecimal(string d) 
 {
     return stoi(d, 0, 2);
 }
