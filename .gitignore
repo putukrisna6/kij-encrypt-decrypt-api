@@ -1,3 +1,10 @@
+# Ignore Linux Executables
+*
+!*/
+!*.*
+!LICENSE
+!.gitignore
+
 # Prerequisites
 *.d
 
@@ -36,3 +43,5 @@ src/main
 files/
 src/client
 src/server
+.vscode
+*tempCodeRunnerFile.cpp
