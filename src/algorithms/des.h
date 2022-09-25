@@ -6,7 +6,6 @@
 #include "helpers/operation.h"
 #include "helpers/log.h"
 #include <vector>
-using namespace std;
 
 typedef unsigned short int usi;
 

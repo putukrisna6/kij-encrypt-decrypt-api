@@ -1,8 +1,5 @@
-#include <iostream>
 #include <assert.h>
 #include "des.h"
-#include "helpers/convertion.h"
-using namespace std;
 
 /**
  * @brief Store key, plaintext, and expected cipher text value
