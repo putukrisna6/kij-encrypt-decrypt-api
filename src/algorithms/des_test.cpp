@@ -1,8 +1,7 @@
 #include <iostream>
 #include <assert.h>
 #include "des.h"
-#include "helper.h"
-
+#include "helpers/helper.h"
 using namespace std;
 
 /**

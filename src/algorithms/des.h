@@ -1,7 +1,10 @@
-#include "encryption.h"
-#include "helper.h"
-#include <vector>
+#ifndef DES_H
+#define DES_H
 
+#include "encryption.h"
+#include "helpers/helper.h"
+#include "helpers/log.h"
+#include <vector>
 using namespace std;
 
 typedef unsigned short int usi;
@@ -44,12 +47,8 @@ class DES : public Encryption {
             return plainText;
         }
 
-        bool getLog() {
-            return logIsActive;
-        }
-
         void setLog(bool log) {
-            logIsActive = log;
+            activateLog(log);
         }
 
     private:
@@ -59,7 +58,6 @@ class DES : public Encryption {
         string bin64Key;
         vector<string> encryptionRoundKeys; // in binary
         vector<string> decryptionRoundKeys; // in binary
-        bool logIsActive;
 
         /* number of bits to shift on key for each round */
         static constexpr int ls[16] = { 
@@ -241,22 +239,6 @@ class DES : public Encryption {
             return permute(left + right, fp, 64);
         }
 
-        void log(string str) {
-            if (!logIsActive) {
-                return;
-            }
-
-            time_t currTime;
-            tm* currTm;
-            char formatedTime[100];
-
-            time(&currTime);
-            currTm = localtime(&currTime);
-            strftime(formatedTime, 50, "%T", currTm);
-
-            printf("%s - %s\n", formatedTime, str.c_str());
-        }
-
         /**
          * @brief Do S-Box permutation.
          *
@@ -334,3 +316,5 @@ class DES : public Encryption {
             }
         }
 };
+
+#endif

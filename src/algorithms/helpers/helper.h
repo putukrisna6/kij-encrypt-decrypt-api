@@ -1,12 +1,11 @@
+#ifndef HELPER_H
+#define HELPER_H
+
 #include <iostream>
 #include <unordered_map>
 #include <bitset>
 #include <math.h>
-
 using namespace std;
-
-#ifndef HELPER_H
-#define HELPER_H
 
 string binToHex(string s) {
     // binary to hexadecimal conversion
