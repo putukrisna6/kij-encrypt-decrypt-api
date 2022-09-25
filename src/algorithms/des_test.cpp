@@ -28,7 +28,6 @@ vector<vector<string>> testCases{
 
 int main()
 {
-
     for (int i = 0; i < testCases.size(); i++) {
         vector<string> testCase = testCases[i];
 

@@ -8,8 +8,7 @@ using namespace std;
 #ifndef HELPER_H
 #define HELPER_H
 
-string binToHex(string s)
-{
+string binToHex(string s) {
     // binary to hexadecimal conversion
     unordered_map<string, string> mp;
     mp["0000"] = "0";
@@ -37,8 +36,7 @@ string binToHex(string s)
     return hex;
 }
 
-string hexToBin(string s)
-{
+string hexToBin(string s) {
     // hexadecimal to binary conversion
     unordered_map<char, string> mp;
     mp['0'] = "0000";
@@ -65,8 +63,7 @@ string hexToBin(string s)
     return bin;
 }
 
-string stringToBinary(string s)
-{
+string stringToBinary(string s) {
     string bin = "";
     for (char &_char : s) {
         bin += bitset<8>(_char).to_string();
@@ -74,8 +71,7 @@ string stringToBinary(string s)
     return bin;
 }
 
-string stringToUppercase(string s)
-{
+string stringToUppercase(string s) {
     for (size_t i = 0; i < s.length(); i++) {
         if (!isalpha(s[i]) || isupper(s[i])) {
             continue;
@@ -85,8 +81,7 @@ string stringToUppercase(string s)
     return s;
 }
 
-string decimalToBinary(unsigned int d)
-{
+string decimalToBinary(unsigned int d) {
     string res = "";
     while (d > 0) {
         res = to_string(d % 2) + res;
@@ -95,13 +90,11 @@ string decimalToBinary(unsigned int d)
     return res;
 }
 
-unsigned int binaryToDecimal(string d)
-{
+unsigned int binaryToDecimal(string d) {
     return stoi(d, 0, 2);
 }
 
-string shiftLeft(string s, int shifts)
-{
+string shiftLeft(string s, int shifts) {
     size_t length = s.length();
 
     if (shifts % length == 0) {
@@ -120,8 +113,7 @@ string shiftLeft(string s, int shifts)
     return res;
 }
 
-string XOR(string a, string b)
-{
+string XOR(string a, string b) {
     string res = "";
     for (int i = 0; i < a.size(); i++) {
         res += (a[i] == b[i]) ? "0" : "1";
@@ -129,8 +121,7 @@ string XOR(string a, string b)
     return res;
 }
 
-string convertToString(char *a)
-{
+string convertToString(char *a) {
     string s = a;
     return a;
 }
