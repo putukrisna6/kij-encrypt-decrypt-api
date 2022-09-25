@@ -2,7 +2,8 @@
 #define DES_H
 
 #include "encryption.h"
-#include "helpers/helper.h"
+#include "helpers/convertion.h"
+#include "helpers/operation.h"
 #include "helpers/log.h"
 #include <vector>
 using namespace std;
