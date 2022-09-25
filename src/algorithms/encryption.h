@@ -1,8 +1,8 @@
-#include <iostream>
-using namespace std;
-
 #ifndef ENCRYPTION_H
 #define ENCRYPTION_H
+
+#include <iostream>
+using namespace std;
 
 class Encryption
 {

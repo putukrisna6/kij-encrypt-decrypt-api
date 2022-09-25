@@ -1,3 +1,8 @@
+#ifndef COBA_COBA_H
+#define COBA_COBA_H
+
+#include "encryption.h"
+
 class CobaCoba : public Encryption
 {
     public:
@@ -19,3 +24,5 @@ class CobaCoba : public Encryption
             return cipherText;
         }
 };
+
+#endif
