@@ -9,30 +9,63 @@
 
 typedef unsigned short int usi;
 
-// All input is expected to be in binary.
 class DES : public Encryption {
     public:
         DES(string key) {
-            bin64Key = key;
+            bin64Key = (isBinaryString(key)) ? key : stringToBinary(key);
             generateRoundKeys();
         }
 
+        /**
+         * @brief Encrypt plaintext.
+         * 
+         * @param plainText Can be in binary string or ASCII string
+         * @return string 
+         *      * If plainText is in binary string, then output will be in binary string
+         *      * If plainText is in ASCII string, then output will be in ASCII string
+         */
         string encrypt(string plainText) {
             log("Encryption:\n");
+
+            bool inBinary = isBinaryString(plainText);
+            if (!inBinary) {
+                plainText = stringToBinary(plainText);
+            }
 
             string cipherText = __encrypt(plainText, encryptionRoundKeys);
             log("--------------------------------------------");
             log("Ciphertext: " + binToHex(cipherText) + "\n");
 
+            if (!inBinary) {
+                cipherText = binaryToString(cipherText);
+            }
+
             return cipherText;
         }
 
+        /**
+         * @brief Decrypt plaintext.
+         * 
+         * @param cipherText Can be in binary string or ASCII string
+         * @return string 
+         *      * If cipherText is in binary string, then output will be in binary string
+         *      * If cipherText is in ASCII string, then output will be in ASCII string
+         */
         string decrypt(string cipherText) {
             log("Decryption:\n");
+
+            bool inBinary = isBinaryString(cipherText);
+            if (!inBinary) {
+                cipherText = stringToBinary(cipherText);
+            }
 
             string plainText = __encrypt(cipherText, decryptionRoundKeys);
             log("--------------------------------------------");
             log("Plaintext: " + binToHex(plainText) + "\n");
+
+            if (!inBinary) {
+                plainText = binaryToString(plainText);
+            }
 
             return plainText;
         }
@@ -178,6 +211,9 @@ class DES : public Encryption {
          * Functions
          **********************************************************************/
 
+        /**
+         * @param plainText Must be a binary string.
+         */
         string __encrypt(string plainText, vector<string> roundKeys) {
             // Initial permutation
             string binPT = plainText;

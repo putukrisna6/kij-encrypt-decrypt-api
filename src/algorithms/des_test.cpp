@@ -4,12 +4,10 @@
 /**
  * @brief Store key, plaintext, and expected cipher text value
  * 
- * Input is expected to be in binary.
- * 
  * Format:
  *      * key
  *      * plaintext
- *      * expected ciphertext
+ *      * expected ciphertext = if empty, the expected ciphertext wont be checked
  */
 vector<vector<string>> testCases{
     { /* William Stallings Book Testcase */
@@ -22,6 +20,11 @@ vector<vector<string>> testCases{
         "0001001000110100010101101010101111001101000100110010010100110110", 
         "1100000010110111101010001101000001011111001110101000001010011100"
     },
+    { /* 64-bit (1 block) String Testcase */
+        "8_chars_", 
+        "8_chars_", 
+        ""
+    }
 };
 
 int main()
@@ -33,10 +36,12 @@ int main()
         des->setLog(true);
 
         string cipherText = des->encrypt(testCase[1]);
-        assert(cipherText == stringToUppercase(testCase[2]));
+        if (testCase[2] != "") {
+            assert(cipherText == testCase[2]);
+        }
 
         string decryptedCipherText = des->decrypt(cipherText);
-        assert(decryptedCipherText == stringToUppercase(testCase[1]));
+        assert(decryptedCipherText == testCase[1]);
 
         cout << "Testcase " << i + 1 << " succeed" << endl;
     }

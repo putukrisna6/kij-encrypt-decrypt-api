@@ -110,4 +110,11 @@ string convertToString(char *a) {
     return a;
 }
 
+bool isBinaryString(string str) {
+    for(size_t i = 0; i < str.length(); i++) {
+       if(str[i] != '1' && str[i]!='0') return false;
+    }
+    return true; 
+}
+
 #endif
