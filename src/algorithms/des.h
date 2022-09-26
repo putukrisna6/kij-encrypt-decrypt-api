@@ -12,6 +12,11 @@ class DES : public Encryption {
     public:
         DES(string key) {
             bin64Key = (isBinaryString(key)) ? key : stringToBinary(key);
+            if (bin64Key.length() != 64) {
+                throw invalid_argument(
+                    "DES key length must equal to 64-bit (8 character)"
+                );
+            }
             generateRoundKeys();
         }
 
