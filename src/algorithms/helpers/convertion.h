@@ -69,6 +69,19 @@ string stringToBinary(string s) {
     return bin;
 }
 
+string binaryToString(string b) {
+    string str = "";
+    size_t i = 0;
+
+    while (i < b.length()) {
+        string byte = b.substr(i, 8);
+        char c = strtol(byte.c_str(), 0, 2);
+        str += c;
+        i += 8;
+    }
+    return str;
+}
+
 string stringToUppercase(string s) {
     for (size_t i = 0; i < s.length(); i++) {
         if (!isalpha(s[i]) || isupper(s[i])) {

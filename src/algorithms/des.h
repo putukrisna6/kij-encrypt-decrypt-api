@@ -9,26 +9,20 @@
 
 typedef unsigned short int usi;
 
+// All input is expected to be in binary.
 class DES : public Encryption {
-    // TODO: Handle string as encryption input
-    // TODO: Add sanity check for input (key, plaintext, ciphertext)
-    // TODO: Handle file as encryption input
     public:
-        // Key is expected to be in hexadecimal
         DES(string key) {
-            bin64Key = hexToBin(stringToUppercase(key));
+            bin64Key = key;
             generateRoundKeys();
         }
 
         string encrypt(string plainText) {
             log("Encryption:\n");
 
-            string cipherText = __encrypt(
-                stringToUppercase(plainText), encryptionRoundKeys
-            );
-            cipherText = binToHex(cipherText);
+            string cipherText = __encrypt(plainText, encryptionRoundKeys);
             log("--------------------------------------------");
-            log("Ciphertext: " + cipherText + "\n");
+            log("Ciphertext: " + binToHex(cipherText) + "\n");
 
             return cipherText;
         }
@@ -36,13 +30,9 @@ class DES : public Encryption {
         string decrypt(string cipherText) {
             log("Decryption:\n");
 
-            string plainText = __encrypt(
-                stringToUppercase(cipherText),
-                decryptionRoundKeys
-            );
-            plainText = binToHex(plainText);
+            string plainText = __encrypt(cipherText, decryptionRoundKeys);
             log("--------------------------------------------");
-            log("Plaintext: " + plainText + "\n");
+            log("Plaintext: " + binToHex(plainText) + "\n");
 
             return plainText;
         }
@@ -190,7 +180,7 @@ class DES : public Encryption {
 
         string __encrypt(string plainText, vector<string> roundKeys) {
             // Initial permutation
-            string binPT = hexToBin(plainText);
+            string binPT = plainText;
             binPT = permute(binPT, ip, 64);
             log("After initial permutation: " + binToHex(binPT));
 
