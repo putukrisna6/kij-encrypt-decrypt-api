@@ -20,18 +20,18 @@ vector<vector<string>> testCases{
         "0001001000110100010101101010101111001101000100110010010100110110", 
         "1100000010110111101010001101000001011111001110101000001010011100"
     },
-    { /* 64-bit (1 block) plaintext Testcase */
+    { /* 64-bit (1 block) Plaintext Testcase */
         "8_chars_", 
         "8_chars_", 
         ""
     },
-    { /* 128-bit (2 block) plaintext Testcase */
+    { /* 128-bit (2 block) Plaintext Testcase */
         "8_chars_", 
         "16_long_strings_", 
         ""
     },
     { /**
-        * 127-bit (15 byte) plaintext Testcase 
+        * 127-bit (15 byte) Plaintext Testcase 
         * (1 full-block and 1 block with 1 padding byte) 
         */
         "8_chars_", 
@@ -39,11 +39,19 @@ vector<vector<string>> testCases{
         ""
     },
     { /**
-        * 129-bit (17 byte) plaintext Testcase 
+        * 129-bit (17 byte) Plaintext Testcase 
         * (2 full-block and 1 block with 7 padding byte) 
         */
         "8_chars_", 
         "15_long_strings", 
+        ""
+    },
+    { /** 
+        * 56-bit Binary Plaintext Testcase 
+        * (1 block with 1 padding byte)
+        */
+        "1010101010111011000010010001100000100111001101101100110011011101", 
+        "00010010001101000101011010101011110011010001001100100101",
         ""
     },
 };
