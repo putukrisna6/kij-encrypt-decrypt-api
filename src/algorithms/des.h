@@ -6,6 +6,7 @@
 #include "helpers/operation.h"
 #include "helpers/log.h"
 #include <vector>
+#include <cmath>
 
 typedef unsigned short int usi;
 
@@ -25,26 +26,15 @@ class DES : public Encryption {
          *      * If plainText is in ASCII string, then output will be in ASCII string
          */
         string encrypt(string plainText) {
-            log("Encryption:\n");
-
-            bool inBinary = isBinaryString(plainText);
-            if (!inBinary) {
-                plainText = stringToBinary(plainText);
-            }
+            log("################# Encryption #################\n");
 
             string cipherText = __encrypt(plainText, encryptionRoundKeys);
-            log("--------------------------------------------");
-            log("Ciphertext: " + binToHex(cipherText) + "\n");
-
-            if (!inBinary) {
-                cipherText = binaryToString(cipherText);
-            }
 
             return cipherText;
         }
 
         /**
-         * @brief Decrypt plaintext.
+         * @brief Decrypt ciphertext.
          * 
          * @param cipherText Can be in binary string or ASCII string
          * @return string 
@@ -52,20 +42,9 @@ class DES : public Encryption {
          *      * If cipherText is in ASCII string, then output will be in ASCII string
          */
         string decrypt(string cipherText) {
-            log("Decryption:\n");
-
-            bool inBinary = isBinaryString(cipherText);
-            if (!inBinary) {
-                cipherText = stringToBinary(cipherText);
-            }
+            log("################# Decryption #################\n");
 
             string plainText = __encrypt(cipherText, decryptionRoundKeys);
-            log("--------------------------------------------");
-            log("Plaintext: " + binToHex(plainText) + "\n");
-
-            if (!inBinary) {
-                plainText = binaryToString(plainText);
-            }
 
             return plainText;
         }
@@ -212,9 +191,56 @@ class DES : public Encryption {
          **********************************************************************/
 
         /**
-         * @param plainText Must be a binary string.
+         * @brief Encrypt a string.
+         * 
+         * Receive a string and splits it into multiple blocks of (64-bits).
+         * Add padding bytes using PKCS padding method when a block contain less than 64-bits.
+         * 
+         * @param plainText Can be in binary string or ASCII string.
+         * @param roundKeys 
+         * @return string 
+         *      * If plainText is in binary string, then output will be in binary string
+         *      * If plainText is in ASCII string, then output will be in ASCII string
          */
         string __encrypt(string plainText, vector<string> roundKeys) {
+            bool inBinary = isBinaryString(plainText);
+            if (!inBinary) {
+                plainText = stringToBinary(plainText);
+            }
+
+            string combined = "";
+            size_t blocks = ceil(plainText.length() / 64);
+            int remainder = plainText.length() % 64;
+
+            for (size_t i = 0; i < blocks; i++) {
+                log("Block " + to_string(i + 1));
+                string currentBlock = plainText.substr(i*64, 64);
+
+                string cipherText = __encryptOneBlock(currentBlock, roundKeys);
+                log("--------------------------------------------");
+                log("Output at block " + to_string(i + 1) + ": " + 
+                    binToHex(cipherText) + "\n"
+                );
+                
+                combined += cipherText;
+            }
+
+            log("--------------------------------------------");
+            log("Combined: " + binToHex(combined) + "\n");
+
+            if (!inBinary) {
+                combined = binaryToString(combined);
+            }
+
+            return combined;
+        }
+
+        /**
+         * @brief Encrypt one block (64-bit)
+         * 
+         * @param plainText Must be a binary string and has 64-bit.
+         */
+        string __encryptOneBlock(string plainText, vector<string> roundKeys) {
             // Initial permutation
             string binPT = plainText;
             binPT = permute(binPT, ip, 64);

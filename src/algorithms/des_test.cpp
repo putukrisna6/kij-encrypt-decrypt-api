@@ -20,9 +20,14 @@ vector<vector<string>> testCases{
         "0001001000110100010101101010101111001101000100110010010100110110", 
         "1100000010110111101010001101000001011111001110101000001010011100"
     },
-    { /* 64-bit (1 block) String Testcase */
+    { /* 64-bit (1 block) plaintext Testcase */
         "8_chars_", 
         "8_chars_", 
+        ""
+    },
+    { /* 128-bit (2 block) plaintext Testcase */
+        "8_chars_", 
+        "16_long_strings_", 
         ""
     }
 };
