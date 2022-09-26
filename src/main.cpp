@@ -12,6 +12,7 @@
 #include "algorithms/encryption.h"
 #include "algorithms/coba_coba.h"
 #include "algorithms/rc4.h"
+#include "algorithms/des.h"
 
 // Constants
 #define FILE_ROOT "../files/"
@@ -28,7 +29,10 @@
 DataLayer dataLayer;
 ViewLayer viewLayer;
 Encryption *encryption;
+
 const string key = "I_AM_A_KEY";
+const string desKey = "8_chars_";
+
 
 void __instantiateEncryption(int chosenAlgo) {
     switch (chosenAlgo) {
@@ -37,6 +41,9 @@ void __instantiateEncryption(int chosenAlgo) {
             break;
         case ALGO_RC4:
             encryption = new ARC4(key);
+            break;
+        case ALGO_DES:
+            encryption = new DES(desKey);
             break;
         default:
             throw runtime_error("invalid option");
