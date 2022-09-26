@@ -5,8 +5,6 @@
 #include "helpers/convertion.h"
 #include "helpers/operation.h"
 #include "helpers/log.h"
-#include <vector>
-#include <cmath>
 
 typedef unsigned short int usi;
 
@@ -20,15 +18,26 @@ class DES : public Encryption {
         /**
          * @brief Encrypt plaintext.
          * 
+         * If plainText is in binary string, then output will be in binary string
+         * If plainText is in ASCII string, then output will be in ASCII string
+         * 
          * @param plainText Can be in binary string or ASCII string
-         * @return string 
-         *      * If plainText is in binary string, then output will be in binary string
-         *      * If plainText is in ASCII string, then output will be in ASCII string
+         * @return string
          */
         string encrypt(string plainText) {
             log("################# Encryption #################\n");
 
+            bool inBinary = isBinaryString(plainText);
+            if (!inBinary) {
+                plainText = stringToBinary(plainText);
+            }
+
             string cipherText = __encrypt(plainText, encryptionRoundKeys);
+
+            if (!inBinary) {
+                cipherText = binaryToString(cipherText);
+                log("Combined string: " + cipherText + "\n");
+            }
 
             return cipherText;
         }
@@ -36,15 +45,27 @@ class DES : public Encryption {
         /**
          * @brief Decrypt ciphertext.
          * 
+         * If cipherText is in binary string, then output will be in binary string.
+         * If cipherText is in ASCII string, then output will be in ASCII string.
+         * 
          * @param cipherText Can be in binary string or ASCII string
-         * @return string 
-         *      * If cipherText is in binary string, then output will be in binary string
-         *      * If cipherText is in ASCII string, then output will be in ASCII string
+         * @return string
          */
         string decrypt(string cipherText) {
             log("################# Decryption #################\n");
 
+            bool inBinary = isBinaryString(cipherText);
+            if (!inBinary) {
+                cipherText = stringToBinary(cipherText);
+            }
+
             string plainText = __encrypt(cipherText, decryptionRoundKeys);
+            plainText = pkcsUnpad(plainText, 8);
+
+            if (!inBinary) {
+                plainText = binaryToString(plainText);
+                log("Combined string: " + plainText + "\n");
+            }
 
             return plainText;
         }
@@ -191,46 +212,33 @@ class DES : public Encryption {
          **********************************************************************/
 
         /**
-         * @brief Encrypt a string.
+         * @brief Encrypt a plain binary string into a ciphered binary string.
          * 
-         * Receive a string and splits it into multiple blocks of (64-bits).
-         * Add padding bytes using PKCS padding method when a block contain less than 64-bits.
-         * 
-         * @param plainText Can be in binary string or ASCII string.
+         * @param plainText Can be in binary string
          * @param roundKeys 
-         * @return string 
-         *      * If plainText is in binary string, then output will be in binary string
-         *      * If plainText is in ASCII string, then output will be in ASCII string
+         * @return string in binary string
          */
         string __encrypt(string plainText, vector<string> roundKeys) {
-            bool inBinary = isBinaryString(plainText);
-            if (!inBinary) {
-                plainText = stringToBinary(plainText);
-            }
 
             string combined = "";
-            size_t blocks = ceil(plainText.length() / 64);
-            int remainder = plainText.length() % 64;
+            vector<string> blocks = splitIntoBlocks(plainText, 8);
+            size_t blockCounter = 1;
 
-            for (size_t i = 0; i < blocks; i++) {
-                log("Block " + to_string(i + 1));
-                string currentBlock = plainText.substr(i*64, 64);
+            for (string block : blocks) {
+                log("Block " + to_string(blockCounter));
 
-                string cipherText = __encryptOneBlock(currentBlock, roundKeys);
+                string cipherText = __encryptOneBlock(block, roundKeys);
                 log("--------------------------------------------");
-                log("Output at block " + to_string(i + 1) + ": " + 
+                log("Output at block " + to_string(blockCounter) + ": " + 
                     binToHex(cipherText) + "\n"
                 );
                 
                 combined += cipherText;
+                blockCounter++;
             }
 
             log("--------------------------------------------");
             log("Combined: " + binToHex(combined) + "\n");
-
-            if (!inBinary) {
-                combined = binaryToString(combined);
-            }
 
             return combined;
         }

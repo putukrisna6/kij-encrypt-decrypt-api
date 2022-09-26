@@ -101,6 +101,24 @@ string decimalToBinary(unsigned int d) {
     return res;
 }
 
+/**
+ * @brief Add leading zero to make output in a byte form.
+ */
+string decimalToByteBinary(unsigned int d) {
+    string res = decimalToBinary(d);
+
+    int remainder = res.length() % 8;
+    if (remainder > 0) {
+        string padder = "";
+        for (int i = 8 - remainder; i > 0; i--) {
+            padder += "0";
+        }
+        res = padder + res;
+    }
+
+    return res;
+}
+
 unsigned int binaryToDecimal(string d) {
     return stoi(d, 0, 2);
 }

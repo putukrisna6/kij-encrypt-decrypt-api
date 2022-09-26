@@ -29,7 +29,23 @@ vector<vector<string>> testCases{
         "8_chars_", 
         "16_long_strings_", 
         ""
-    }
+    },
+    { /**
+        * 127-bit (15 byte) plaintext Testcase 
+        * (1 full-block and 1 block with 1 padding byte) 
+        */
+        "8_chars_", 
+        "15_long_strings", 
+        ""
+    },
+    { /**
+        * 129-bit (17 byte) plaintext Testcase 
+        * (2 full-block and 1 block with 7 padding byte) 
+        */
+        "8_chars_", 
+        "15_long_strings", 
+        ""
+    },
 };
 
 int main()
@@ -38,7 +54,7 @@ int main()
         vector<string> testCase = testCases[i];
 
         DES *des = new DES(testCase[0]);
-        des->setLog(true);
+        // des->setLog(true);
 
         string cipherText = des->encrypt(testCase[1]);
         if (testCase[2] != "") {
