@@ -12,6 +12,17 @@ class ViewLayer
             cout << "-----------------------------\n";
         }
 
+        void resultsDisplay(string cipherText, string decrypted) {
+            cout << "\nMessage received\n";
+            cout << "\tEncrypted: " << cipherText << endl;
+            cout << "\tDecrypted: " << decrypted << endl;
+        }
+
+        void resultsDisplay(string fileName) {
+            cout << "\nFile received\n";
+            cout << "\t" << fileName << " saved\n";
+        }
+
         int optionsDisplay() {
             cout << "\nAvailable options:\n";
             cout << "\t1. Send\n";

@@ -87,19 +87,16 @@ void sendDataFlow() {
     // Send what to receive
     client.clientTransmit(to_string(chosenType));
     client.clientListen();
-    cout << client.getBuffer() << endl;
 
     // Send file name if needed
     if (chosenType == SEND_FILE) {
         client.clientTransmit(fileName);
         client.clientListen();
-        cout << client.getBuffer() << endl;
     }
 
     // Send Encryption Type
     client.clientTransmit(to_string(chosenAlgo));
     client.clientListen();
-    cout << client.getBuffer() << endl;
     
     // Split data to 1024 chunks
     vector<string_view> splitData;
@@ -118,7 +115,6 @@ void sendDataFlow() {
     // Send how many data parts
     client.clientTransmit(to_string(splitData.size()));
     client.clientListen();
-    cout << client.getBuffer() << endl;
 
     // Send Encrypted Message
     for (auto d : splitData) {
@@ -172,6 +168,9 @@ void receiveDataFlow() {
         string filePath = FILE_ROOT;
         filePath.append(fileName);
         dataLayer.writeFile(filePath, decrypted);
+        viewLayer.resultsDisplay(fileName);
+    } else {
+        viewLayer.resultsDisplay(cipherText, decrypted);
     }
 
     server.serverEnd();
