@@ -1,6 +1,8 @@
 // Standard library headers
 #include <iostream>
 #include <string>
+#include <sstream>
+#include <sys/stat.h>
 
 // Local library headers
 #include "layers/view_layer.h"
@@ -15,7 +17,7 @@
 #include "algorithms/des.h"
 
 // Constants
-#define FILE_ROOT "../files/"
+#define FILE_ROOT "../downloads/"
 
 #define ALGO_AES 1
 #define ALGO_RC4 2
@@ -50,8 +52,12 @@ void __instantiateEncryption(int chosenAlgo) {
     }
 }
 
-string sendFile() {
+string sendFile(string &fileName) {
     string filePath = viewLayer.sendFileDisplay();
+
+    stringstream X(filePath);
+    while (getline(X, fileName, '/'));
+
     return dataLayer.readFile(filePath);
 }
 
@@ -61,11 +67,12 @@ string sendText() {
 
 void sendDataFlow() {
     int chosenType = viewLayer.messageOptionsDisplay();
-    string plainText;
+    string plainText, \
+            fileName;
 
     switch (chosenType) {
         case SEND_FILE:
-            plainText = sendFile();
+            plainText = sendFile(fileName);
             break;
         case SEND_TEXT:
             plainText = sendText();
@@ -80,6 +87,18 @@ void sendDataFlow() {
     string cipherText = encryption->encrypt(plainText);
 
     Client client;
+
+    // Send what to receive
+    client.clientTransmit(to_string(chosenType));
+    client.clientListen();
+    cout << client.getBuffer() << endl;
+
+    // Send file name if needed
+    if (chosenType == SEND_FILE) {
+        client.clientTransmit(fileName);
+        client.clientListen();
+        cout << client.getBuffer() << endl;
+    }
 
     // Send Encryption Type
     client.clientTransmit(to_string(chosenAlgo));
@@ -97,20 +116,41 @@ void sendDataFlow() {
 
 void receiveDataFlow() {
     Server server;
+    string fileName;
+
+    // Get what to receive
+    server.serverListen();
+    int chosenType = stoi(server.getBuffer());
+    server.serverTransmit("Received what to receive");
+
+    // Get file name if needed
+    if (chosenType == SEND_FILE) {
+        server.serverListen();
+        fileName = server.getBuffer();
+        server.serverTransmit("Received file name");
+    }
 
     // Get Encryption Type
     server.serverListen();
     string algo = server.getBuffer();
     __instantiateEncryption(stoi(algo));
-    server.serverTransmit(algo);
+    server.serverTransmit("Received how to decrypt");
 
     server.serverListen();
     const char *tmp = server.getBuffer();
-    std::string cipherText(tmp);
-    cout << cipherText << endl;
-    server.serverTransmit("Server Received Message");
+    server.serverTransmit("Received what to decrypt");
 
-    cout << encryption->decrypt(cipherText) << endl;
+    string cipherText(tmp);
+    cout << cipherText << endl;
+
+    string decrypted = encryption->decrypt(cipherText);
+    cout << decrypted << endl;
+
+    if (chosenType == SEND_FILE) {
+        string filePath = FILE_ROOT;
+        filePath.append(fileName);
+        dataLayer.writeFile(filePath, decrypted);
+    }
 
     server.serverEnd();
 }

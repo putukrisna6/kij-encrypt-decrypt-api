@@ -41,6 +41,7 @@
 # Custom
 src/main
 files/
+downloads/
 src/client
 src/server
 .vscode
