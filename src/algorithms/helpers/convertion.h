@@ -6,57 +6,59 @@
 #include <bitset>
 using namespace std;
 
-string binToHex(string s) {
-    // binary to hexadecimal conversion
-    unordered_map<string, string> mp;
-    mp["0000"] = "0";
-    mp["0001"] = "1";
-    mp["0010"] = "2";
-    mp["0011"] = "3";
-    mp["0100"] = "4";
-    mp["0101"] = "5";
-    mp["0110"] = "6";
-    mp["0111"] = "7";
-    mp["1000"] = "8";
-    mp["1001"] = "9";
-    mp["1010"] = "A";
-    mp["1011"] = "B";
-    mp["1100"] = "C";
-    mp["1101"] = "D";
-    mp["1110"] = "E";
-    mp["1111"] = "F";
+// binary to hexadecimal conversion
+static unordered_map<string, string> bh {
+    { "0000", "0" },
+    { "0001", "1" },
+    { "0010", "2" },
+    { "0011", "3" },
+    { "0100", "4" },
+    { "0101", "5" },
+    { "0110", "6" },
+    { "0111", "7" },
+    { "1000", "8" },
+    { "1001", "9" },
+    { "1010", "A" },
+    { "1011", "B" },
+    { "1100", "C" },
+    { "1101", "D" },
+    { "1110", "E" },
+    { "1111", "F" },
+};
 
+// hexadecimal to binary conversion
+static unordered_map<char, string> hb {
+    { '0', "0000" },
+    { '1', "0001" },
+    { '2', "0010" },
+    { '3', "0011" },
+    { '4', "0100" },
+    { '5', "0101" },
+    { '6', "0110" },
+    { '7', "0111" },
+    { '8', "1000" },
+    { '9', "1001" },
+    { 'A', "1010" },
+    { 'B', "1011" },
+    { 'C', "1100" },
+    { 'D', "1101" },
+    { 'E', "1110" },
+    { 'F', "1111" },
+};
+
+string binToHex(string s) {
     string hex = "";
     for (size_t i = 0; i < s.length(); i += 4) {
         string ch = s.substr(i, 4);
-        hex += mp[ch];
+        hex += bh[ch];
     }
     return hex;
 }
 
 string hexToBin(string s) {
-    // hexadecimal to binary conversion
-    unordered_map<char, string> mp;
-    mp['0'] = "0000";
-    mp['1'] = "0001";
-    mp['2'] = "0010";
-    mp['3'] = "0011";
-    mp['4'] = "0100";
-    mp['5'] = "0101";
-    mp['6'] = "0110";
-    mp['7'] = "0111";
-    mp['8'] = "1000";
-    mp['9'] = "1001";
-    mp['A'] = "1010";
-    mp['B'] = "1011";
-    mp['C'] = "1100";
-    mp['D'] = "1101";
-    mp['E'] = "1110";
-    mp['F'] = "1111";
-
     string bin = "";
     for (size_t i = 0; i < s.length(); i++) {
-        bin += mp[s[i]];
+        bin += hb[s[i]];
     }
     return bin;
 }
