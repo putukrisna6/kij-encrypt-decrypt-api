@@ -47,8 +47,16 @@ class Client
             clientEnd();
         }
 
-        char* getBuffer() {
-            return this->buffer;
+        std::string getBuffer() {
+            auto& str = this->buffer;
+            string s(std::begin(str), std::end(str));
+        
+            size_t i = s.length();
+            for (; i >= 0; i--) {
+                if (s[i] != '\0') break;
+            }
+            s = s.substr(0, i+1);
+            return s;
         }
 
         void clientListen() {
@@ -70,7 +78,19 @@ class Client
                     throw std::logic_error("not allowed to transmit");
                 }
 
-                send(this->sock, message.c_str(), strlen(message.c_str()), 0);
+                char buffer[message.length()] = {0};
+                strcpy(buffer, message.c_str());
+        
+                size_t currIndex = strlen(buffer);
+                while (currIndex < message.length()) {
+                    currIndex += 1;
+        
+                    size_t diff = message.length() - currIndex;
+                    memcpy(&buffer[currIndex], &message[currIndex], diff);
+                    currIndex += diff;
+                }
+                 
+                send(this->sock, buffer, sizeof(buffer), 0);
             } catch (const std::exception& e) {
                 std::cout << e.what() << std::endl;
             }

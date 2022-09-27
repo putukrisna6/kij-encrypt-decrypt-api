@@ -14,6 +14,7 @@
 #include "algorithms/encryption.h"
 #include "algorithms/coba_coba.h"
 #include "algorithms/rc4.h"
+#include "algorithms/des.h"
 
 // Constants
 #define FILE_ROOT "../downloads/"
@@ -29,6 +30,7 @@
 #define BUFFER_SIZE 1024
 
 const string key = "I_AM_A_KEY";
+const string desKey = "8_chars_";
 
 // Global
 DataLayer dataLayer;
@@ -42,6 +44,9 @@ void __instantiateEncryption(int chosenAlgo) {
             break;
         case ALGO_RC4:
             encryption = new ARC4(key);
+            break;
+        case ALGO_DES:
+            encryption = new DES(desKey);
             break;
         default:
             throw runtime_error("invalid option");
