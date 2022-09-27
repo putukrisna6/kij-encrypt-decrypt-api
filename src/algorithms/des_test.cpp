@@ -54,6 +54,11 @@ vector<vector<string>> testCases{
         "00010010001101000101011010101011110011010001001100100101",
         ""
     },
+    { /** Krisna testcase */
+        "8_chars_", 
+        "lorem ipsum dolor sit amet",
+        ""
+    },
 };
 
 int main()
