@@ -27,14 +27,14 @@
 #define SEND_FILE 1
 #define SEND_TEXT 2
 
+#define BUFFER_SIZE 1024
+
+const string key = "I_AM_A_KEY";
+
 // Global
 DataLayer dataLayer;
 ViewLayer viewLayer;
 Encryption *encryption;
-
-const string key = "I_AM_A_KEY";
-const string desKey = "8_chars_";
-
 
 void __instantiateEncryption(int chosenAlgo) {
     switch (chosenAlgo) {
@@ -104,11 +104,32 @@ void sendDataFlow() {
     client.clientTransmit(to_string(chosenAlgo));
     client.clientListen();
     cout << client.getBuffer() << endl;
+    
+    // Split data to 1024 chunks
+    vector<string_view> splitData;
+    if (!cipherText.empty()) {
+        splitData.reserve((cipherText.size() + (BUFFER_SIZE - 1)) / BUFFER_SIZE);
 
-    // Send Encrypted Message
-    client.clientTransmit(cipherText);
+        string_view cipherView = cipherText;
+        size_t i = 0;
+        
+        do {
+            splitData.push_back(cipherView.substr(i, BUFFER_SIZE));
+            i += splitData.back().size();
+        } while (i < cipherText.size());
+    }
+
+    // Send how many data parts
+    client.clientTransmit(to_string(splitData.size()));
     client.clientListen();
     cout << client.getBuffer() << endl;
+
+    // Send Encrypted Message
+    for (auto d : splitData) {
+        string message(d);
+        client.clientTransmit(message);
+        client.clientListen();
+    }
 
     client.clientEnd();
     cin.clear();
@@ -136,9 +157,18 @@ void receiveDataFlow() {
     __instantiateEncryption(stoi(algo));
     server.serverTransmit("Received how to decrypt");
 
+    // Get number of data parts
     server.serverListen();
-    string cipherText = server.getBuffer();
-    server.serverTransmit("Received what to decrypt");
+    int parts = stoi(server.getBuffer());
+    server.serverTransmit("Received parts");
+
+    // Get Encrypted Data
+    string cipherText;
+    for (int i = 0; i < parts; i++) {
+        server.serverListen();
+        cipherText.append(server.getBuffer());
+        server.serverTransmit("Received what to decrypt");
+    }
     cout << cipherText << endl;
 
     string decrypted = encryption->decrypt(cipherText);
@@ -159,7 +189,6 @@ int main() {
 
     int chosenOption = -1;
     chosenOption = viewLayer.optionsDisplay();
-    string data;
 
     // possible command layer? lmao
     switch (chosenOption) {
