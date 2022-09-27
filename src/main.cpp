@@ -169,10 +169,8 @@ void receiveDataFlow() {
         cipherText.append(server.getBuffer());
         server.serverTransmit("Received what to decrypt");
     }
-    cout << cipherText << endl;
 
     string decrypted = encryption->decrypt(cipherText);
-    cout << decrypted << endl;
 
     if (chosenType == SEND_FILE) {
         string filePath = FILE_ROOT;
