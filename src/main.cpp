@@ -30,15 +30,12 @@
 #define BUFFER_SIZE 1024
 
 const string key = "I_AM_A_KEY";
+const string desKey = "8_chars_";
 
 // Global
 DataLayer dataLayer;
 ViewLayer viewLayer;
 Encryption *encryption;
-
-const string key = "I_AM_A_KEY";
-const string desKey = "8_chars_";
-
 
 void __instantiateEncryption(int chosenAlgo) {
     switch (chosenAlgo) {
