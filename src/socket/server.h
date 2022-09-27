@@ -73,7 +73,7 @@ class Server
                 if (!isListen) {
                     throw std::logic_error("not allowed to listen");
                 }
-
+                memset(this->buffer, 0, sizeof(this->buffer));
                 this->valread = read(this->new_socket, this->buffer, BUFFER_SIZE);
             } catch (const std::exception& e) {
                 std::cout << e.what() << std::endl;

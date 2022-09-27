@@ -56,6 +56,7 @@ class Client
                 if (!isListen) {
                     throw std::logic_error("not allowed to listen");
                 }
+                memset(this->buffer, 0, sizeof(this->buffer));
                 this->valread = read(this->sock, this->buffer, BUFFER_SIZE);
             } catch (const std::exception& e) {
                 std::cout << e.what() << std::endl;
