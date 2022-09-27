@@ -43,8 +43,6 @@ class DataLayer
         void writeFile(string filePath, string data) {
             try {
                 mkdir("../downloads", 0777);
-
-
                 ofstream wf(filePath.c_str());
 
                 if (!wf) {

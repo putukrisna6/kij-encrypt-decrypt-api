@@ -137,10 +137,8 @@ void receiveDataFlow() {
     server.serverTransmit("Received how to decrypt");
 
     server.serverListen();
-    const char *tmp = server.getBuffer();
+    string cipherText = server.getBuffer();
     server.serverTransmit("Received what to decrypt");
-
-    string cipherText(tmp);
     cout << cipherText << endl;
 
     string decrypted = encryption->decrypt(cipherText);
