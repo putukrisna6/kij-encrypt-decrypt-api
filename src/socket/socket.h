@@ -6,15 +6,7 @@
 #include <arpa/inet.h>
 #include <unistd.h>
 #include <exception>
-
-#include <netinet/in.h>
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <sys/socket.h>
-#include <unistd.h>
-#include <iostream>
-#include <exception>
+#include "../algorithms/helpers/convertion.h"
 
 #define PORT 8080
 #define BUFFER_SIZE 1024
@@ -29,6 +21,7 @@ class Socket
             fd;
         struct sockaddr_in address;
         char buffer[BUFFER_SIZE] = { 0 };
+        string content;
         bool isListen;
 
         void __listen() {
@@ -36,8 +29,20 @@ class Socket
                 if (!isListen) {
                     throw logic_error("not allowed to listen");
                 }
+
+                // Get content length
+                memset(this->buffer, 0, sizeof(this->buffer));
+                read(this->sock, this->buffer, BUFFER_SIZE);
+                string res = convertToString(this->buffer);
+                size_t contentLength = stoi(convertToString(this->buffer));
+
+                // Get content
                 memset(this->buffer, 0, sizeof(this->buffer));
                 this->valread = read(this->sock, this->buffer, BUFFER_SIZE);
+
+                // Remove trash byte and set content
+                string s(buffer, contentLength);
+                content = s;
             } catch (const exception& e) {
                 cout << e.what() << endl;
             }
@@ -50,19 +55,26 @@ class Socket
                     throw logic_error("not allowed to transmit");
                 }
 
-                char buffer[message.length()] = {0};
-                strcpy(buffer, message.c_str());
-        
-                size_t currIndex = strlen(buffer);
-                while (currIndex < message.length()) {
-                    currIndex += 1;
-        
-                    size_t diff = message.length() - currIndex;
-                    memcpy(&buffer[currIndex], &message[currIndex], diff);
-                    currIndex += diff;
+                // Get content length
+                size_t messageLength = message.length();
+                if (messageLength > BUFFER_SIZE) {
+                    throw invalid_argument("Transmited message size is bigger than buffer size");
                 }
-                 
-                send(this->sock, buffer, sizeof(buffer), 0);
+
+                // Get content
+                char buffer[message.length()] = {0};
+                memcpy(&buffer[0], &message[0], message.length());
+
+                // Send content length
+                send(
+                    this->sock, 
+                    to_string(messageLength).c_str(), 
+                    BUFFER_SIZE, 
+                    0
+                );
+
+                // Send content
+                send(this->sock, buffer, BUFFER_SIZE, 0);
             } catch (const exception& e) {
                 cout << e.what() << endl;
             }
@@ -71,15 +83,7 @@ class Socket
 
     public:
         string getBuffer() {
-            auto &str = this->buffer;
-            string s(std::begin(str), std::end(str));
-        
-            size_t i = s.length();
-            for (; i >= 0; i--) {
-                if (s[i] != '\0') break;
-            }
-            s = s.substr(0, i+1);
-            return s;
+            return this->content;
         }
 
         virtual void end() = 0;
