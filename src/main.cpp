@@ -128,7 +128,7 @@ void sendDataFlow() {
         client.clientListen();
     }
 
-    client.clientEnd();
+    client.end();
     cin.clear();
 }
 
@@ -178,7 +178,7 @@ void receiveDataFlow() {
         viewLayer.resultsDisplay(cipherText, decrypted);
     }
 
-    server.serverEnd();
+    server.end();
 }
 
 int main() {
