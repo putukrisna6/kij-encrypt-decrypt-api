@@ -10,6 +10,8 @@
 #define PORT 8080
 #define BUFFER_SIZE 1024
 
+using namespace std;
+
 class Server
 {
     private:
@@ -64,9 +66,9 @@ class Server
             serverEnd();
         }
 
-        std::string getBuffer() {
+        string getBuffer() {
             auto& str = this->buffer;
-            string s(std::begin(str), std::end(str));
+            string s(begin(str), end(str));
         
             size_t i = s.length();
             for (; i >= 0; i--) {
@@ -79,20 +81,20 @@ class Server
         void serverListen() {
             try {
                 if (!isListen) {
-                    throw std::logic_error("not allowed to listen");
+                    throw logic_error("not allowed to listen");
                 }
                 memset(this->buffer, 0, sizeof(this->buffer));
                 this->valread = read(this->new_socket, this->buffer, BUFFER_SIZE);
-            } catch (const std::exception& e) {
-                std::cout << e.what() << std::endl;
+            } catch (const exception& e) {
+                cout << e.what() << endl;
             }
             isListen = false;
         }
 
-        void serverTransmit(std::string message) {
+        void serverTransmit(string message) {
             try {
                 if (isListen) {
-                    throw std::logic_error("not allowed to transmit");
+                    throw logic_error("not allowed to transmit");
                 }
 
                 char buffer[message.length()] = {0};
@@ -108,8 +110,8 @@ class Server
                 }
 
                 send(this->new_socket, buffer, sizeof(buffer), 0);
-            } catch (const std::exception& e) {
-                std::cout << e.what() << std::endl;
+            } catch (const exception& e) {
+                cout << e.what() << endl;
             }
             isListen = true;
         }
