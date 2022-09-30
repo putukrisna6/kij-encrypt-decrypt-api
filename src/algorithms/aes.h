@@ -7,19 +7,19 @@
  ************************************************************************/
 #include <iostream>
 #include <bitset>
-#include <cstring>
+#include <string.h>
 #include <sstream>
 #include <vector>
 #include "encryption.h"
 
 using namespace std;
-typedef bitset<8> byte;
+typedef bitset<8> Byte;
 typedef bitset<32> word;
 
 const int Nr = 10;  //AES-128 requires 10 rounds of encryption
 const int Nk = 4;   //Nk Represents the number of word s that are input keys
 
-const byte S_Box[16][16] = {
+const Byte S_Box[16][16] = {
         {0x63, 0x7C, 0x77, 0x7B, 0xF2, 0x6B, 0x6F, 0xC5, 0x30, 0x01, 0x67, 0x2B, 0xFE, 0xD7, 0xAB, 0x76},
         {0xCA, 0x82, 0xC9, 0x7D, 0xFA, 0x59, 0x47, 0xF0, 0xAD, 0xD4, 0xA2, 0xAF, 0x9C, 0xA4, 0x72, 0xC0},
         {0xB7, 0xFD, 0x93, 0x26, 0x36, 0x3F, 0xF7, 0xCC, 0x34, 0xA5, 0xE5, 0xF1, 0x71, 0xD8, 0x31, 0x15},
@@ -38,7 +38,7 @@ const byte S_Box[16][16] = {
         {0x8C, 0xA1, 0x89, 0x0D, 0xBF, 0xE6, 0x42, 0x68, 0x41, 0x99, 0x2D, 0x0F, 0xB0, 0x54, 0xBB, 0x16}
 };
 
-byte Inv_S_Box[16][16] = {
+Byte Inv_S_Box[16][16] = {
         {0x52, 0x09, 0x6A, 0xD5, 0x30, 0x36, 0xA5, 0x38, 0xBF, 0x40, 0xA3, 0x9E, 0x81, 0xF3, 0xD7, 0xFB},
         {0x7C, 0xE3, 0x39, 0x82, 0x9B, 0x2F, 0xFF, 0x87, 0x34, 0x8E, 0x43, 0x44, 0xC4, 0xDE, 0xE9, 0xCB},
         {0x54, 0x7B, 0x94, 0x32, 0xA6, 0xC2, 0x23, 0x3D, 0xEE, 0x4C, 0x95, 0x0B, 0x42, 0xFA, 0xC3, 0x4E},
@@ -71,7 +71,7 @@ word Rcon[10] = {0x01000000, 0x02000000, 0x04000000, 0x08000000, 0x10000000,
 /**
  *  S Box Conversion - The first four bits are line numbers and the last four bits are column numbers
  */
-void SubBytes(byte mtx[4*4])
+void SubBytes(Byte mtx[4*4])
 {
     for(int i=0; i<16; ++i)
     {
@@ -84,10 +84,10 @@ void SubBytes(byte mtx[4*4])
 /**
  *  Line Transform - Byte Cyclic Shift
  */
-void ShiftRows(byte mtx[4*4])
+void ShiftRows(Byte mtx[4*4])
 {
     //The second line circle moves one bit to the left
-    byte temp = mtx[4];
+    Byte temp = mtx[4];
     for(int i=0; i<3; ++i)
         mtx[i+4] = mtx[i+5];
     mtx[7] = temp;
@@ -108,14 +108,14 @@ void ShiftRows(byte mtx[4*4])
 /**
  *  Multiplication over Finite Fields GF(2^8)
  */
-byte GFMul(byte a, byte b) {
-    byte p = 0;
-    byte hi_bit_set;
+Byte GFMul(Byte a, Byte b) {
+    Byte p = 0;
+    Byte hi_bit_set;
     for (int counter = 0; counter < 8; counter++) {
-        if ((b & byte(1)) != 0) {
+        if ((b & Byte(1)) != 0) {
             p ^= a;
         }
-        hi_bit_set = (byte) (a & byte(0x80));
+        hi_bit_set = (Byte) (a & Byte(0x80));
         a <<= 1;
         if (hi_bit_set != 0) {
             a ^= 0x1b; /* x^8 + x^4 + x^3 + x + 1 */
@@ -128,9 +128,9 @@ byte GFMul(byte a, byte b) {
 /**
  *  Column transformation
  */
-void MixColumns(byte mtx[4*4])
+void MixColumns(Byte mtx[4*4])
 {
-    byte arr[4];
+    Byte arr[4];
     for(int i=0; i<4; ++i)
     {
         for(int j=0; j<4; ++j)
@@ -146,7 +146,7 @@ void MixColumns(byte mtx[4*4])
 /**
  *  Round Key Plus Transform - XOR each column with the extended key
  */
-void AddRoundKey(byte mtx[4*4], word k[4])
+void AddRoundKey(Byte mtx[4*4], word k[4])
 {
     for(int i=0; i<4; ++i)
     {
@@ -155,10 +155,10 @@ void AddRoundKey(byte mtx[4*4], word k[4])
         word k3 = (k[i] << 16) >> 24;
         word k4 = (k[i] << 24) >> 24;
 
-        mtx[i] = mtx[i] ^ byte(k1.to_ulong());
-        mtx[i+4] = mtx[i+4] ^ byte(k2.to_ulong());
-        mtx[i+8] = mtx[i+8] ^ byte(k3.to_ulong());
-        mtx[i+12] = mtx[i+12] ^ byte(k4.to_ulong());
+        mtx[i] = mtx[i] ^ Byte(k1.to_ulong());
+        mtx[i+4] = mtx[i+4] ^ Byte(k2.to_ulong());
+        mtx[i+8] = mtx[i+8] ^ Byte(k3.to_ulong());
+        mtx[i+12] = mtx[i+12] ^ Byte(k4.to_ulong());
     }
 }
 
@@ -166,7 +166,7 @@ void AddRoundKey(byte mtx[4*4], word k[4])
 /**
  *  Inverse S-box transformation
  */
-void InvSubBytes(byte mtx[4*4])
+void InvSubBytes(Byte mtx[4*4])
 {
     for(int i=0; i<16; ++i)
     {
@@ -179,10 +179,10 @@ void InvSubBytes(byte mtx[4*4])
 /**
  *  Reverse Transform - Cyclic Right Shift in Bytes
  */
-void InvShiftRows(byte mtx[4*4])
+void InvShiftRows(Byte mtx[4*4])
 {
     //The second line circle moves one bit to the right
-    byte temp = mtx[7];
+    Byte temp = mtx[7];
     for(int i=3; i>0; --i)
         mtx[i+4] = mtx[i+3];
     mtx[4] = temp;
@@ -200,9 +200,9 @@ void InvShiftRows(byte mtx[4*4])
     mtx[15] = temp;
 }
 
-void InvMixColumns(byte mtx[4*4])
+void InvMixColumns(Byte mtx[4*4])
 {
-    byte arr[4];
+    Byte arr[4];
     for(int i=0; i<4; ++i)
     {
         for(int j=0; j<4; ++j)
@@ -217,9 +217,9 @@ void InvMixColumns(byte mtx[4*4])
 
 /******************************Following is the key extension section ***************************************************************/
 /**
- * Convert four byte s to one word.
+ * Convert four Byte s to one word.
  */
-word Word(byte& k1, byte& k2, byte& k3, byte& k4)
+word Word(Byte& k1, Byte& k2, Byte& k3, Byte& k4)
 {
     word result(0x00000000);
     word temp;
@@ -238,7 +238,7 @@ word Word(byte& k1, byte& k2, byte& k3, byte& k4)
 }
 
 /**
- *  Cyclic left shift by byte
+ *  Cyclic left shift by Byte
  *  That is to say, [a0, a1, a2, a3] becomes [a1, a2, a3, a0]
  */
 word RotWord(word& rw)
@@ -249,7 +249,7 @@ word RotWord(word& rw)
 }
 
 /**
- *  S-box transformation for each byte in input word
+ *  S-box transformation for each Byte in input word
  */
 word SubWord(word& sw)
 {
@@ -258,7 +258,7 @@ word SubWord(word& sw)
     {
         int row = sw[i+7]*8 + sw[i+6]*4 + sw[i+5]*2 + sw[i+4];
         int col = sw[i+3]*8 + sw[i+2]*4 + sw[i+1]*2 + sw[i];
-        byte val = S_Box[row][col];
+        Byte val = S_Box[row][col];
         for(int j=0; j<8; ++j)
             temp[i+j] = val[j];
     }
@@ -268,7 +268,7 @@ word SubWord(word& sw)
 /**
  *  Key Extension Function - Extended 128-bit key to w[4*(Nr+1)]
  */
-void KeyExpansion(byte key[4*Nk], word w[4*(Nr+1)])
+void KeyExpansion(Byte key[4*Nk], word w[4*(Nr+1)])
 {
     word temp;
     int i = 0;
@@ -299,10 +299,10 @@ void KeyExpansion(byte key[4*Nk], word w[4*(Nr+1)])
 class AES: public Encryption {
 private:
     word round_keys[4 * (Nr + 1)];
-    vector<vector<byte>> message_blocks;
+    vector<vector<Byte>> message_blocks;
     size_t message_size;
-    byte private_key[16];
-    byte plain_text[16];
+    Byte private_key[16];
+    Byte plain_text[16];
 
 
 public:
@@ -311,7 +311,7 @@ public:
 //        cout << "key: " << key << endl;
 //        cout << "key in hex: " << " ";
         for (int i = 0; i < 16; ++i) {
-            this->private_key[i] = (byte) key[i];
+            this->private_key[i] = (Byte) key[i];
 //            cout << hex << this->private_key[i].to_ulong() << " ";
         }
 //        cout << endl;
@@ -324,11 +324,11 @@ public:
     *  encryption
     */
     string encrypt(string p_plain_text) {
-        receive_message_into_block_of_16_byte(p_plain_text);
+        receive_message_into_block_of_16_Byte(p_plain_text);
 
         cout << "=== Begin encrypting ===" << endl;
         int block_order = 0;
-        for (vector<byte> &message_block : message_blocks) {
+        for (vector<Byte> &message_block : message_blocks) {
             cout << "block #" << block_order << " : ";
             for (int i = 0; i < 16; ++i) {
                 if (i < message_block.size()) {
@@ -374,11 +374,11 @@ public:
             message_block.shrink_to_fit();
 
 //            cout << "encrypted: ";
-            for (byte encrypted : this->plain_text) {
+            for (Byte encrypted : this->plain_text) {
 
                 message_block.push_back(encrypted);
 
-                // Print each of encrypted byte as a Char
+                // Print each of encrypted Byte as a Char
 //                cout << (char) encrypted.to_ulong();
             }
 //            cout << endl << endl;
@@ -391,21 +391,21 @@ public:
         return message_blocks_as_encrypted();
     }
 
-    void receive_message_into_block_of_16_byte(string message) {
+    void receive_message_into_block_of_16_Byte(string message) {
         clear_message_blocks();
 
         message_size = message.length();
         size_t last_read_index = 0;
         size_t remainder = message_size % 16;
-        byte padding = (byte) (16 - remainder);
+        Byte padding = (Byte) (16 - remainder);
 
         for (size_t i = 0; i <= message_size / 16; ++i) {
             last_read_index += 16;
 
-            vector<byte> temp;
+            vector<Byte> temp;
             for (size_t j = (i * 16); j < last_read_index; ++j) {
                 if (j < message_size) {
-                    temp.push_back((byte) message[j]);
+                    temp.push_back((Byte) message[j]);
                 } else {
                     temp.push_back(padding);
                 }
@@ -416,21 +416,21 @@ public:
         }
 //
         cout << "received message in blocks of 16 each: ";
-//        for (const vector<byte>& vector_byte : message_blocks) {
-//            for (byte char_byte : vector_byte) {
-//                cout << (char) char_byte.to_ulong();
+//        for (const vector<Byte>& vector_Byte : message_blocks) {
+//            for (Byte char_Byte : vector_Byte) {
+//                cout << (char) char_Byte.to_ulong();
 //            }
 //        }
 
-        for (const vector<byte>& vector_byte : message_blocks) {
-            for (byte char_byte : vector_byte) {
-                cout << hex << char_byte.to_ulong() << " ";
+        for (const vector<Byte>& vector_Byte : message_blocks) {
+            for (Byte char_Byte : vector_Byte) {
+                cout << hex << char_Byte.to_ulong() << " ";
             }
         }
         cout << endl;
     }
 
-    void receive_cipher_into_block_of_16_byte(string message) {
+    void receive_cipher_into_block_of_16_Byte(string message) {
         clear_message_blocks();
 
         message_size = message.length();
@@ -439,9 +439,9 @@ public:
         for (size_t i = 0; i <= message_size / 16; ++i) {
             last_read_index += 16;
 
-            vector<byte> temp;
+            vector<Byte> temp;
             for (size_t j = (i * 16); j < last_read_index; ++j) {
-                temp.push_back((byte) message[j]);
+                temp.push_back((Byte) message[j]);
             }
             message_blocks.push_back(temp);
             temp.clear();
@@ -449,15 +449,15 @@ public:
         }
 //
         cout << "received message in blocks of 16 each: ";
-        for (const vector<byte>& vector_byte : message_blocks) {
-            for (byte char_byte : vector_byte) {
-                cout << (char) char_byte.to_ulong();
+        for (const vector<Byte>& vector_Byte : message_blocks) {
+            for (Byte char_Byte : vector_Byte) {
+                cout << (char) char_Byte.to_ulong();
             }
         }
 
-//        for (const vector<byte>& vector_byte : message_blocks) {
-//            for (byte char_byte : vector_byte) {
-//                cout << hex << char_byte.to_ulong() << " ";
+//        for (const vector<Byte>& vector_Byte : message_blocks) {
+//            for (Byte char_Byte : vector_Byte) {
+//                cout << hex << char_Byte.to_ulong() << " ";
 //            }
 //        }
         cout << endl;
@@ -468,19 +468,19 @@ public:
         string encrypted;
 
         cout << endl << endl << "encrypted result: ";
-        for (const vector<byte>& vector_byte : message_blocks) {
-            for (byte char_byte : vector_byte) {
-                char new_char = (char) (char_byte.to_ulong());
+        for (const vector<Byte>& vector_Byte : message_blocks) {
+            for (Byte char_Byte : vector_Byte) {
+                char new_char = (char) (char_Byte.to_ulong());
                 encrypted += (new_char);
 
 //                stringstream stream;
 //                unsigned int x;
 //
-//                stream << hex << char_byte.to_ulong();
+//                stream << hex << char_Byte.to_ulong();
 //                stream >> x;
 //
 //                encrypted += (char) x;
-                cout << hex << char_byte.to_ulong() << " ";
+                cout << hex << char_Byte.to_ulong() << " ";
 //                cout << x << "";
 //                cout << "current encrypted: " << encrypted << endl;
             }
@@ -492,23 +492,23 @@ public:
 
     string message_block_as_decrypted() {
         vector<char> decrypted;
-        byte padding = 0x10;
+        Byte padding = 0x10;
         int repeat_count = 0;
 
-        for (const vector<byte>& vector_byte : message_blocks) {
-            for (byte char_byte : vector_byte) {
-                if (char_byte != padding) {
+        for (const vector<Byte>& vector_Byte : message_blocks) {
+            for (Byte char_Byte : vector_Byte) {
+                if (char_Byte != padding) {
                     repeat_count = 0;
-                    padding = char_byte;
+                    padding = char_Byte;
                 } else {
                     repeat_count++;
                 }
 
-                decrypted.push_back((char) char_byte.to_ulong());
+                decrypted.push_back((char) char_Byte.to_ulong());
             }
         }
 
-        // Create string from decrypted byte
+        // Create string from decrypted Byte
         string result = {decrypted.begin(), decrypted.end()};
 
         // Slice the result by how much is the padding
@@ -520,11 +520,11 @@ public:
      */
     string decrypt(string p_cipher_text) override {
         cout << "=== Begin decrypting ===" << endl;
-        receive_cipher_into_block_of_16_byte(p_cipher_text);
+        receive_cipher_into_block_of_16_Byte(p_cipher_text);
 
 
         int block_order = 0;
-        for (vector<byte> &message_block : message_blocks) {
+        for (vector<Byte> &message_block : message_blocks) {
             cout << "block #" << block_order << " : ";
 
             for (int i = 0; i < message_block.size(); ++i) {
@@ -561,7 +561,7 @@ public:
 
 
 //            cout << "decrypted: ";
-//            for (byte encrypted : plain_text) {
+//            for (Byte encrypted : plain_text) {
 //                cout << (char) encrypted.to_ulong();
 //                message_block.push_back(encrypted);
 //            }
@@ -574,9 +574,9 @@ public:
 
     void clear_message_blocks() {
         // Clear last encrypt/decrypt message operation
-        for (vector<byte> vector_byte : message_blocks) {
-            vector_byte.clear();
-            vector_byte.shrink_to_fit();
+        for (vector<Byte> vector_Byte : message_blocks) {
+            vector_Byte.clear();
+            vector_Byte.shrink_to_fit();
         }
         message_blocks.clear();
         message_blocks.shrink_to_fit();
