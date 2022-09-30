@@ -17,11 +17,16 @@ using namespace std;
  */
 vector<vector<string>> testCases{
     {
+        "+~(®Ò¦«÷	ÏO<",
+        "21àCZ17ö0¨¢4",
+        "9-Á]Á¨I±ß¹s"
+    },
+    {
         "16_long_private1",
         "AES encrypt message",
         ""
     },
-    {
+    { /* William Stallings Book testcase */
         "qÉGÙèY·­Ö¯g",
         "#Eg«ÍïþÜºvT2",
         "ÿJS¿|i4«Cd¹"
