@@ -29,7 +29,7 @@ string generateRandomPlainText(int length) {
 string generatePeriodicPlainText(int length) {
     string result;
     for(int i = 0; i < length; i++) {
-        char c = (char) (minPrintableAsciiCharacter + i % (minPrintableAsciiCharacter - maxPrintableAsciiCharacter + 1));
+        char c = (char) (minPrintableAsciiCharacter + i % (maxPrintableAsciiCharacter - minPrintableAsciiCharacter + 1));
         result += c;
     }
     return result;

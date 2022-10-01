@@ -97,7 +97,7 @@ private:
     string parseStringToInts(string str) {
         string result;
         for(size_t i = 0; i < str.size(); i++) {
-            result += to_string((int) str[i]);
+            result += to_string((unsigned char) str[i]);
             if(i < str.size() - 1) {
                 result += ' ';
             }
