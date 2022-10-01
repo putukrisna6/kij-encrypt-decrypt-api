@@ -13,13 +13,13 @@ void Encryption_WhenCipherTextIsDecrypted_ResultEqualsToPlainText(Encryption *en
         plainTextLengths.push_back(pow(2, i));
     }
 
-    string cipherText, decryptedCipherText;
     vector<string> plainTexts;
-
     for(int i = 0; i < plainTextLengths.size(); i++) {
 //        plainTexts.push_back(generateRandomPlainText(plainTextLengths[i]));
         plainTexts.push_back(generatePeriodicPlainText(plainTextLengths[i]));
     }
+
+    string cipherText, decryptedCipherText;
 
     for(int i = 0; i < plainTexts.size(); i++) {
         cipherText = encryption->encrypt(plainTexts[i]);
