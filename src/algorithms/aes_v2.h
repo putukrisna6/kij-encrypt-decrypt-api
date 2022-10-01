@@ -253,33 +253,38 @@ class AES_V2 {
         bool isLogActive = true;
         static constexpr unsigned int blockBytesLen = 4 * 4 * sizeof(unsigned char);
 
-        void SubBytes(unsigned char state[4][4]) {
+
+        string SubBytes(string plainText) {
             unsigned int i, j;
-            unsigned char t;
+            string result;
+
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < 4; j++) {
-                    t = state[i][j];
-                    state[i][j] = sbox[t / 16][t % 16];
-                }
+                string word = plainText.substr(i * 32, 32);
+                result += SubWord(word);
             }
+
+            return result;
         }
 
-        void ShiftRow(
-            unsigned char state[4][4],
-            unsigned int i,
-            unsigned int n
-        ) {
-            unsigned char tmp[4];
-            for (unsigned int j = 0; j < 4; j++) {
-                tmp[j] = state[i][(j + n) % 4];
-            }
-            memcpy(state[i], tmp, 4 * sizeof(unsigned char));
-        }  // shift row i on n positions
+        string ShiftRows(string text) {
+            string result, result2;
 
-        void ShiftRows(unsigned char state[4][4]) {
-            ShiftRow(state, 1, 1);
-            ShiftRow(state, 2, 2);
-            ShiftRow(state, 3, 3);
+            for (int i = 0; i < 4; ++i) {
+                string word;
+                for (int j = 0; j < 4; ++j) {
+                    word += text.substr((j * 32) + i * 8, 8);
+                }
+                result += shiftLeft(word, i * 8);
+            }
+
+            for (int i = 0; i < 4; ++i) {
+                string word;
+                for (int j = 0; j < 4; ++j) {
+                    word += result.substr((j * 32) + i * 8, 8);
+                }
+                result2 += word;
+            }
+            return result2;
         }
 
         unsigned char xtime(unsigned char b) {
@@ -309,19 +314,30 @@ class AES_V2 {
             }
         }
 
-        void AddRoundKey(unsigned char state[4][4], unsigned char *key) {
-            unsigned int i, j;
+        /**
+        * @brief Do S-box permutation.
+        *
+        * @param text 32-bit binary string
+        * @param key 32-bit binary string
+        * @return string
+        */
+        string AddRoundKey(string text, string key) {
+            unsigned int i;
+            string result;
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < 4; j++) {
-                    state[i][j] = state[i][j] ^ key[i + 4 * j];
-                }
+                string a = text.substr(i * 32, 32);
+                string b = key.substr(i * 32, 32);
+                string temp = XOR(a, b);
+
+                result += temp;
             }
+            return result;
         }
 
         /**
          * @brief Do S-box permutation.
          * 
-         * @param a 32-byte binary string
+         * @param a 32-bit binary string
          * @return string 
          */
         string SubWord(string a) {
@@ -337,7 +353,7 @@ class AES_V2 {
         /**
          * @brief Move one byte to the left.
          * 
-         * @param a 32-byte binary string
+         * @param a 32-bit binary string
          * @return string 
          */
         string RotWord(string a) {
@@ -347,13 +363,6 @@ class AES_V2 {
                 a.substr(3*8, 8) + 
                 a.substr(0*8, 8);
             return res;
-        }
-
-        void XorWords(unsigned char *a, unsigned char *b, unsigned char *c) {
-            int i;
-            for (i = 0; i < 4; i++) {
-                c[i] = a[i] ^ b[i];
-            }
         }
 
         string Rcon(unsigned int n) {
@@ -379,13 +388,13 @@ class AES_V2 {
          * @return string Expanded key
          */
         string KeyExpansion(string binKey) {
-            string res = "";
+            string res;
 
             // Get first 4-words
             for (int i = 0; i < 4; i++) {
                 string temp = binKey.substr(i * 32, 32);
                 res += temp;
-                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
+//                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
             }
 
             // Get remaining words
@@ -399,7 +408,7 @@ class AES_V2 {
                     temp = XOR(x, rCon);
                 }
                 temp = XOR(res.substr((i - 4) * 32, 32), temp);
-                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
+//                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
                 res += temp;
             }
             
@@ -439,9 +448,7 @@ class AES_V2 {
         }
 
         void InvShiftRows(unsigned char state[4][4]) {
-            ShiftRow(state, 1, 4 - 1);
-            ShiftRow(state, 2, 4 - 2);
-            ShiftRow(state, 3, 4 - 3);
+
         }
 
         void CheckLength(unsigned int len) {
@@ -455,38 +462,58 @@ class AES_V2 {
         }
 
 
-        void EncryptBlock(
-            const unsigned char in[],
-            unsigned char out[],
-            unsigned char *roundKeys
+        /**
+         * Encrypt a single block of text
+         *
+         * @param text
+         * @return
+         */
+        string EncryptBlock(
+            string text
         ) {
+            string tag = "EncryptBlock";
+            string result;
             unsigned char state[4][4];
             unsigned int i, j, round;
 
-            for (i = 0; i < 4; i++) {
-                for (j = 0; j < 4; j++) {
-                    state[i][j] = in[i + 4 * j];
-                }
+
+            string keyRoundOne = expandedKey.substr(0, 128);
+            result = AddRoundKey(text, keyRoundOne);
+
+            log(tag, "AddRoundKey: ");
+            for (int k = 0; k < result.length() / 32; k++) {
+                this->log(tag, binToHex(result.substr(k * 32, 32)));
             }
 
-            AddRoundKey(state, roundKeys);
 
-            for (round = 1; round <= 16 - 1; round++) {
-                SubBytes(state);
-                ShiftRows(state);
-                MixColumns(state);
-                AddRoundKey(state, roundKeys + round * 4 * 4);
+            result = SubBytes(result);
+            log(tag, "SubBytes: ");
+            for (int k = 0; k < result.length() / 32; k++) {
+                this->log(tag, binToHex(result.substr(k * 32, 32)));
             }
 
-            SubBytes(state);
-            ShiftRows(state);
-            AddRoundKey(state, roundKeys + 16 * 4 * 4);
-
-            for (i = 0; i < 4; i++) {
-                for (j = 0; j < 4; j++) {
-                    out[i + 4 * j] = state[i][j];
-                }
+            result = ShiftRows(result);
+            log(tag, "ShiftRows: ");
+            for (int k = 0; k < result.length() / 32; k++) {
+                this->log(tag, binToHex(result.substr(k * 32, 32)));
             }
+//            for (round = 1; round <= 16 - 1; round++) {
+//                SubBytes(state);
+//                ShiftRows(state);
+//                MixColumns(state);
+//                AddRoundKey(state, roundKeys + round * 4 * 4);
+//            }
+//
+//            SubBytes(state);
+//            ShiftRows(state);
+//            AddRoundKey(state, roundKeys + 16 * 4 * 4);
+//
+//            for (i = 0; i < 4; i++) {
+//                for (j = 0; j < 4; j++) {
+//                    out[i + 4 * j] = state[i][j];
+//                }
+//            }
+            return result;
         }
 
         void DecryptBlock(
@@ -494,33 +521,33 @@ class AES_V2 {
             unsigned char out[],
             unsigned char *roundKeys
         ) {
-            unsigned char state[4][4];
-            unsigned int i, j, round;
-
-            for (i = 0; i < 4; i++) {
-                for (j = 0; j < 4; j++) {
-                    state[i][j] = in[i + 4 * j];
-                }
-            }
-
-            AddRoundKey(state, roundKeys + 16 * 4 * 4);
-
-            for (round = 16 - 1; round >= 1; round--) {
-                InvSubBytes(state);
-                InvShiftRows(state);
-                AddRoundKey(state, roundKeys + round * 4 * 4);
-                InvMixColumns(state);
-            }
-
-            InvSubBytes(state);
-            InvShiftRows(state);
-            AddRoundKey(state, roundKeys);
-
-            for (i = 0; i < 4; i++) {
-                for (j = 0; j < 4; j++) {
-                    out[i + 4 * j] = state[i][j];
-                }
-            }
+//            unsigned char state[4][4];
+//            unsigned int i, j, round;
+//
+//            for (i = 0; i < 4; i++) {
+//                for (j = 0; j < 4; j++) {
+//                    state[i][j] = in[i + 4 * j];
+//                }
+//            }
+//
+//            AddRoundKey(state, roundKeys + 16 * 4 * 4);
+//
+//            for (round = 16 - 1; round >= 1; round--) {
+//                InvSubBytes(state);
+//                InvShiftRows(state);
+//                AddRoundKey(state, roundKeys + round * 4 * 4);
+//                InvMixColumns(state);
+//            }
+//
+//            InvSubBytes(state);
+//            InvShiftRows(state);
+//            AddRoundKey(state, roundKeys);
+//
+//            for (i = 0; i < 4; i++) {
+//                for (j = 0; j < 4; j++) {
+//                    out[i + 4 * j] = state[i][j];
+//                }
+//            }
         }
 
         void XorBlocks(
@@ -548,7 +575,7 @@ class AES_V2 {
 
         void log(const std::string& tag, const std::string& message) {
             if (this->isLogActive) {
-                printf("%s - %s\n", tag.c_str(), message.c_str());
+                printf("%s | %s\n", tag.c_str(), message.c_str());
             }
         }
 
@@ -561,81 +588,39 @@ class AES_V2 {
             expandedKey = KeyExpansion(binKey);
         }
 
-        unsigned char *Encrypt(
-            const unsigned char in[],
-            unsigned int inLen,
-            const unsigned char key[]
+        string Encrypt(
+            string plainText
         ) {
             std::string tag = "Encrypt()";
             log(tag, "==== Begin Encrypting ====");
 //            log(tag, "inLen: " + std::to_string(inLen));
 
-
+            int inLen = plainText.length();
             unsigned char padding = blockBytesLen - (inLen % blockBytesLen);
             int newLen = (std::ceil(inLen / (double) blockBytesLen) * blockBytesLen);
-
+//
             CheckLength(newLen);
-            unsigned char *newIn = new unsigned char[newLen];
-            for (int i = 0; i < newLen; ++i) {
-                if (i < inLen) {
-                    newIn[i] = in[i];
-                } else {
-                    newIn[i] = padding;
-                }
-            }
-
-
-            log(tag, "Old length: " + std::to_string(inLen));
-            log(tag, "Old message: ");
-            for (int i = 0; i < inLen; i++) {
-                std::cout << std::hex << (int) in[i] << " ";
-            }
-            std::cout << std::endl;
-            for (int i = 0; i < inLen; i++) {
-                std::cout << in[i] << " ";
-            }
-            std::cout << std::endl;
-
-            log(tag, "New length: " + std::to_string(newLen));
-            log(tag, "New message: ");
-            for (int i = 0; i < newLen; i++) {
-                std::cout << std::hex << (int) newIn[i] << " ";
-            }
-            std::cout << std::endl;
-            for (int i = 0; i < newLen; i++) {
-                std::cout << newIn[i] << " ";
-            }
-            std::cout << std::endl;
-
-
-
-            unsigned char *out = new unsigned char[newLen];
-            unsigned char *roundKeys = new unsigned char[4 * 4 * (16 + 1)];
-
-
-            // KeyExpansion();
-//            log(tag, "Round key: ");
-//            for (int i = 0; i < 4 * 4 * (16 + 1); ++i) {
-//                std::cout << std::hex << (int) roundKeys[i] << " ";
-//                if ((i + 1) % 16 == 0) {
-//                    std::cout << std::endl << std::endl;
-//                } else if ((i + 1) % 4 == 0) {
-//                    std::cout << std::endl;
+//            unsigned char *newIn = new unsigned char[newLen];
+//            for (int i = 0; i < newLen; ++i) {
+//                if (i < inLen) {
+//                    newIn[i] = in[i];
+//                } else {
+//                    newIn[i] = padding;
 //                }
 //            }
+//
+//            unsigned char *out = new unsigned char[newLen];
+//            unsigned char *roundKeys = new unsigned char[4 * 4 * (16 + 1)];
 
-            for (unsigned int i = 0; i < newLen; i += blockBytesLen) {
-                EncryptBlock(newIn + i, out + i, roundKeys);
-                this->log(
-                    tag,
-                    "Round: " + std::to_string(i) + " " +
-                    std::string(reinterpret_cast<const char *>(out))
-                );
-            }
+//            for (unsigned int i = 0; i < newLen; i += blockBytesLen) {
+                string result = EncryptBlock(plainText);
+                for (int i = 0; i < result.length() / 32; i++) {
+                    this->log(tag, binToHex(result.substr(i * 32, 32)));
+                }
+//            }
 
-            delete[] roundKeys;
             this->log(tag, "==== Encrypt Finished ====");
-            return out;
+            return result;
         }
 
         unsigned char *Decrypt(
@@ -668,33 +653,33 @@ class AES_V2 {
 //        unsigned char *DecryptCFB(const unsigned char in[], unsigned int inLen,
 //                                  const unsigned char key[], const unsigned char *iv);
 
-        std::vector<unsigned char> Encrypt(
-            std::vector<unsigned char> in,
-            std::vector<unsigned char> key
-        ) {
-            unsigned char *out = Encrypt(
-                VectorToArray(in),
-                (unsigned int)in.size(),
-                VectorToArray(key)
-            );
-            std::vector<unsigned char> v = ArrayToVector(out, in.size());
-            delete[] out;
-            return v;
-        }
+//        std::vector<unsigned char> Encrypt(
+//            std::vector<unsigned char> in,
+//            std::vector<unsigned char> key
+//        ) {
+//            unsigned char *out = Encrypt(
+//                VectorToArray(in),
+//                (unsigned int)in.size(),
+//                VectorToArray(key)
+//            );
+//            std::vector<unsigned char> v = ArrayToVector(out, in.size());
+//            delete[] out;
+//            return v;
+//        }
 
-        std::vector<unsigned char> DecryptECB(
-            std::vector<unsigned char> in,
-            std::vector<unsigned char> key
-        ) {
-            unsigned char *out = Decrypt(
-                VectorToArray(in),
-                (unsigned int)in.size(),
-                VectorToArray(key)
-            );
-            std::vector<unsigned char> v = ArrayToVector(out, (unsigned int)in.size());
-            delete[] out;
-            return v;
-        }
+//        std::vector<unsigned char> DecryptECB(
+//            std::vector<unsigned char> in,
+//            std::vector<unsigned char> key
+//        ) {
+//            unsigned char *out = Decrypt(
+//                VectorToArray(in),
+//                (unsigned int)in.size(),
+//                VectorToArray(key)
+//            );
+//            std::vector<unsigned char> v = ArrayToVector(out, (unsigned int)in.size());
+//            delete[] out;
+//            return v;
+//        }
 
 //        std::vector<unsigned char> EncryptCBC(std::vector<unsigned char> in,
 //                                              std::vector<unsigned char> key,
