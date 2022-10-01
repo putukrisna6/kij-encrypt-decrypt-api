@@ -11,54 +11,79 @@ double calculateElapsedTimeInMs(clock_t startTime, clock_t endTime) {
     return ((double) (endTime - startTime)) / CLOCKS_PER_SEC * ONE_SEC_TO_MILLISEC;
 }
 
-double calculateEncryptAverageRunningTimeInMs(Encryption *encryption, string plainText, int nIter) {
+double calculateMean(vector<double> data) {
+    if(data.size() == 0) {
+        throw invalid_argument("data size must be > 0");
+    }
+
+    size_t n = data.size();
+    double sum = 0.0;
+
+    for(int i = 0; i < n; i++) {
+        sum += data[i];
+    }
+
+    return sum / n;
+}
+
+double calculatePopulationStandardDeviation(vector<double> data, double mean) {
+    if(data.size() == 0) {
+        throw invalid_argument("data size must be > 0");
+    }
+
+    size_t n = data.size();
+    double sum = 0.0;
+
+    for(int i = 0; i < n; i++) {
+        sum += (data[i] - mean) * (data[i] - mean);
+    }
+
+    return sqrt(sum / n);
+}
+
+vector<double> measureEncryptRunningTimesInMs(Encryption *encryption, string plainText, int nIter) {
     clock_t startTime, endTime;
-    double totalTimeInMs = 0.0, elapsedTimeInMs;
+    vector<double> runningTimes;
 
     for(int i = 0; i < nIter; i++) {
         startTime = clock();
         encryption->encrypt(plainText);
         endTime = clock();
-        elapsedTimeInMs = calculateElapsedTimeInMs(startTime, endTime);
-        totalTimeInMs += elapsedTimeInMs;
+        runningTimes.push_back(calculateElapsedTimeInMs(startTime, endTime));
     }
 
-    return totalTimeInMs / nIter;
+    return runningTimes;
 }
 
-double calculateDecryptAverageRunningTimeInMs(Encryption *encryption, string cipherText, int nIter) {
+vector<double> measureDecryptRunningTimesInMs(Encryption *encryption, string cipherText, int nIter) {
     clock_t startTime, endTime;
-    double totalTimeInMs = 0.0, elapsedTimeInMs;
+    vector<double> runningTimes;
 
     for(int i = 0; i < nIter; i++) {
         startTime = clock();
         encryption->decrypt(cipherText);
         endTime = clock();
-        elapsedTimeInMs = calculateElapsedTimeInMs(startTime, endTime);
-        totalTimeInMs += elapsedTimeInMs;
+        runningTimes.push_back(calculateElapsedTimeInMs(startTime, endTime));
     }
 
-    return totalTimeInMs / nIter;
+    return runningTimes;
 }
 
 void measureRunningTime(Encryption *encryption) {
     vector<int> plainTextLengths;
-    plainTextLengths.push_back(32);
-    plainTextLengths.push_back(64);
-    plainTextLengths.push_back(97);
-    plainTextLengths.push_back(128);
-    plainTextLengths.push_back(256);
-    plainTextLengths.push_back(512);
-    plainTextLengths.push_back(1024);
-    plainTextLengths.push_back(2048);
-    plainTextLengths.push_back(4096);
-    plainTextLengths.push_back(8192);
+
+    for(int i = 5; i <= 16; i++) {
+        plainTextLengths.push_back(pow(2, i));
+    }
 
     string cipherText, decryptedCipherText;
     vector<string> plainTexts;
+    vector<double> encryptRunningTimesInMs, decryptRunningTimesInMs;
+    double encryptRunningTimesMeanInMs, encryptRunningTimesPopulationStandardDeviationInMs,
+        decryptRunningTimesMeanInMs, decryptRunningTimesPopulationStandardDeviationInMs;
 
     for(int i = 0; i < plainTextLengths.size(); i++) {
-        plainTexts.push_back(generateRandomPlainText(plainTextLengths[i]));
+//        plainTexts.push_back(generateRandomPlainText(plainTextLengths[i]));
         plainTexts.push_back(generatePeriodicPlainText(plainTextLengths[i]));
     }
 
@@ -66,11 +91,22 @@ void measureRunningTime(Encryption *encryption) {
         // Run encrypt once to get the cipherText
         cipherText = encryption->encrypt(plainTexts[i]);
 
-        double encryptAverageRunningTimeInMs = calculateEncryptAverageRunningTimeInMs(encryption, plainTexts[i], 10);
-        double decryptAverageRunningTimeInMs = calculateEncryptAverageRunningTimeInMs(encryption, cipherText, 10);
+        encryptRunningTimesInMs = measureEncryptRunningTimesInMs(encryption, plainTexts[i], 10);
+        encryptRunningTimesMeanInMs = calculateMean(encryptRunningTimesInMs);
+        encryptRunningTimesPopulationStandardDeviationInMs = calculatePopulationStandardDeviation(encryptRunningTimesInMs, encryptRunningTimesMeanInMs);
 
-        cout << "plain text #" << i << " (length: " << plainTexts[i].size() << "): "
-            << "encrypt: " << encryptAverageRunningTimeInMs << "ms, decrypt: " << decryptAverageRunningTimeInMs << "ms)" << endl;
+        decryptRunningTimesInMs = measureDecryptRunningTimesInMs(encryption, cipherText, 10);
+        decryptRunningTimesMeanInMs = calculateMean(decryptRunningTimesInMs);
+        decryptRunningTimesPopulationStandardDeviationInMs = calculatePopulationStandardDeviation(decryptRunningTimesInMs, decryptRunningTimesMeanInMs);
+
+        printf("case #%d (size: %d): {enc: {mean: %.3lfms, stddev_p: %.3lfms}, dec: {mean: %.3lfms, stddev_p: %.3lfms}}\n",
+            i,
+            plainTexts[i].size(),
+            encryptRunningTimesMeanInMs,
+            encryptRunningTimesPopulationStandardDeviationInMs,
+            decryptRunningTimesMeanInMs,
+            decryptRunningTimesPopulationStandardDeviationInMs
+        );
     }
 }
 
