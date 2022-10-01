@@ -19,7 +19,7 @@ double calculateMean(vector<double> data) {
     size_t n = data.size();
     double sum = 0.0;
 
-    for(int i = 0; i < n; i++) {
+    for(size_t i = 0; i < n; i++) {
         sum += data[i];
     }
 
@@ -96,7 +96,7 @@ public:
 private:
     string parseStringToInts(string str) {
         string result;
-        for(int i = 0; i < str.size(); i++) {
+        for(size_t i = 0; i < str.size(); i++) {
             result += to_string((int) str[i]);
             if(i < str.size() - 1) {
                 result += ' ';
@@ -184,9 +184,13 @@ int main() {
     srand(time(0));
     string key = "8_chars_";
 
-//    dumpResult(evaluate(new ARC4(key), 10, "rc4"));
+    vector<EvaluationResult> rc4Results, desResults, combinedResults;
+    rc4Results = evaluate(new ARC4(key), 10, "rc4");
+    desResults = evaluate(new DES(key), 10, "des");
 
-    dumpResult(evaluate(new DES(key), 10, "des"));
+    combinedResults = rc4Results;
+    combinedResults.insert(combinedResults.end(), desResults.begin(), desResults.end());
+    dumpResult(combinedResults);
 
     return 0;
 }
