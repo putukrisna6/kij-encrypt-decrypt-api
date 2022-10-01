@@ -4,15 +4,11 @@
 #ifndef AES_V2_H
 #define AES_V2_H
 
-
-#include <cstdio>
-#include <math.h>
 #include <cstring>
-#include <iostream>
-#include <vector>
+#include "helpers/convertion.h"
+#include "helpers/operation.h"
 
-enum class AESKeyLength { AES_128, AES_192, AES_256 };
-
+using namespace std;
 
 const unsigned char sbox[16][16] = {
         {0x63, 0x7c, 0x77, 0x7b, 0xf2, 0x6b, 0x6f, 0xc5, 0x30, 0x01, 0x67, 0x2b,
@@ -252,18 +248,16 @@ constexpr static const unsigned char INV_CMDS[4][4] = {
 
 class AES_V2 {
     private:
-        bool isLogActive = false;
-        static constexpr unsigned int Nb = 4;
-        static constexpr unsigned int blockBytesLen = 4 * Nb * sizeof(unsigned char);
+        string binKey;
+        string expandedKey;
+        bool isLogActive = true;
+        static constexpr unsigned int blockBytesLen = 4 * 4 * sizeof(unsigned char);
 
-        unsigned int Nk;
-        unsigned int Nr;
-
-        void SubBytes(unsigned char state[4][Nb]) {
+        void SubBytes(unsigned char state[4][4]) {
             unsigned int i, j;
             unsigned char t;
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < Nb; j++) {
+                for (j = 0; j < 4; j++) {
                     t = state[i][j];
                     state[i][j] = sbox[t / 16][t % 16];
                 }
@@ -271,18 +265,18 @@ class AES_V2 {
         }
 
         void ShiftRow(
-            unsigned char state[4][Nb],
+            unsigned char state[4][4],
             unsigned int i,
             unsigned int n
         ) {
-            unsigned char tmp[Nb];
-            for (unsigned int j = 0; j < Nb; j++) {
-                tmp[j] = state[i][(j + n) % Nb];
+            unsigned char tmp[4];
+            for (unsigned int j = 0; j < 4; j++) {
+                tmp[j] = state[i][(j + n) % 4];
             }
-            memcpy(state[i], tmp, Nb * sizeof(unsigned char));
+            memcpy(state[i], tmp, 4 * sizeof(unsigned char));
         }  // shift row i on n positions
 
-        void ShiftRows(unsigned char state[4][Nb]) {
+        void ShiftRows(unsigned char state[4][4]) {
             ShiftRow(state, 1, 1);
             ShiftRow(state, 2, 2);
             ShiftRow(state, 3, 3);
@@ -292,8 +286,8 @@ class AES_V2 {
             return (b << 1) ^ (((b >> 7) & 1) * 0x1b);
         } // multiply on x
 
-        void MixColumns(unsigned char state[4][Nb]) {
-            unsigned char temp_state[4][Nb];
+        void MixColumns(unsigned char state[4][4]) {
+            unsigned char temp_state[4][4];
 
             for (size_t i = 0; i < 4; ++i) {
                 memset(temp_state[i], 0, 4);
@@ -315,28 +309,44 @@ class AES_V2 {
             }
         }
 
-        void AddRoundKey(unsigned char state[4][Nb], unsigned char *key) {
+        void AddRoundKey(unsigned char state[4][4], unsigned char *key) {
             unsigned int i, j;
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < Nb; j++) {
+                for (j = 0; j < 4; j++) {
                     state[i][j] = state[i][j] ^ key[i + 4 * j];
                 }
             }
         }
 
-        void SubWord(unsigned char *a) {
-            int i;
-            for (i = 0; i < 4; i++) {
-                a[i] = sbox[a[i] / 16][a[i] % 16];
+        /**
+         * @brief Do S-box permutation.
+         * 
+         * @param a 32-byte binary string
+         * @return string 
+         */
+        string SubWord(string a) {
+            string res = "";
+            for (int i = 0; i < 4; i++) {
+                int decimal = binaryToDecimal(a.substr(i*8,8));
+                string sboxBit = byteToBinary(sbox[decimal / 16][decimal % 16]);
+                res += sboxBit;
             }
+            return res;
         }
 
-        void RotWord(unsigned char *a) {
-            unsigned char c = a[0];
-            a[0] = a[1];
-            a[1] = a[2];
-            a[2] = a[3];
-            a[3] = c;
+        /**
+         * @brief Move one byte to the left.
+         * 
+         * @param a 32-byte binary string
+         * @return string 
+         */
+        string RotWord(string a) {
+            string res = 
+                a.substr(1*8, 8) + 
+                a.substr(2*8, 8) + 
+                a.substr(3*8, 8) + 
+                a.substr(0*8, 8);
+            return res;
         }
 
         void XorWords(unsigned char *a, unsigned char *b, unsigned char *c) {
@@ -346,64 +356,70 @@ class AES_V2 {
             }
         }
 
-        void Rcon(unsigned char *a, unsigned int n) {
-            unsigned int i;
+        string Rcon(unsigned int n) {
             unsigned char c = 1;
-            for (i = 0; i < n - 1; i++) {
+            for (int i = 0; i < n - 1; i++) {
                 c = xtime(c);
             }
 
-            a[0] = c;
-            a[1] = a[2] = a[3] = 0;
+            string res = byteToBinary(c);
+            for (int i = res.length(); i < 32; i++) {
+                res += "0";
+            }
+            return res;
         }
 
-        void KeyExpansion(const unsigned char key[], unsigned char w[]) {
-            unsigned char temp[4];
-            unsigned char rcon[4];
+        /**
+         * @brief Expand key
+         * 
+         * On AES 128, it will takes 16-byte (16 char) key 
+         * to produce 176-byte expanded key.
+         * 
+         * @param binKey 
+         * @return string Expanded key
+         */
+        string KeyExpansion(string binKey) {
+            string res = "";
 
-            unsigned int i = 0;
-            while (i < 4 * Nk) {
-                w[i] = key[i];
-                i++;
+            // Get first 4-words
+            for (int i = 0; i < 4; i++) {
+                string temp = binKey.substr(i * 32, 32);
+                res += temp;
+                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
             }
 
-            i = 4 * Nk;
-            while (i < 4 * Nb * (Nr + 1)) {
-                temp[0] = w[i - 4 + 0];
-                temp[1] = w[i - 4 + 1];
-                temp[2] = w[i - 4 + 2];
-                temp[3] = w[i - 4 + 3];
+            // Get remaining words
+            for (int i = 4; i < 44; i++) {
+                string temp = res.substr((i - 1) * 32, 32);
 
-                if (i / 4 % Nk == 0) {
-                    RotWord(temp);
-                    SubWord(temp);
-                    Rcon(rcon, i / (Nk * 4));
-                    XorWords(temp, rcon, temp);
-                } else if (Nk > 6 && i / 4 % Nk == 4) {
-                    SubWord(temp);
+                if (i % 4 == 0) {
+                    string x = RotWord(temp);
+                    x = SubWord(x);
+                    string rCon = Rcon(i / 4);
+                    temp = XOR(x, rCon);
                 }
-
-                w[i + 0] = w[i - 4 * Nk] ^ temp[0];
-                w[i + 1] = w[i + 1 - 4 * Nk] ^ temp[1];
-                w[i + 2] = w[i + 2 - 4 * Nk] ^ temp[2];
-                w[i + 3] = w[i + 3 - 4 * Nk] ^ temp[3];
-                i += 4;
+                temp = XOR(res.substr((i - 4) * 32, 32), temp);
+                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
+                res += temp;
             }
+            
+
+            return res;
         }
 
-        void InvSubBytes(unsigned char state[4][Nb]) {
+        void InvSubBytes(unsigned char state[4][4]) {
             unsigned int i, j;
             unsigned char t;
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < Nb; j++) {
+                for (j = 0; j < 4; j++) {
                     t = state[i][j];
                     state[i][j] = inv_sbox[t / 16][t % 16];
                 }
             }
         }
 
-        void InvMixColumns(unsigned char state[4][Nb]) {
-            unsigned char temp_state[4][Nb];
+        void InvMixColumns(unsigned char state[4][4]) {
+            unsigned char temp_state[4][4];
 
             for (size_t i = 0; i < 4; ++i) {
                 memset(temp_state[i], 0, 4);
@@ -422,10 +438,10 @@ class AES_V2 {
             }
         }
 
-        void InvShiftRows(unsigned char state[4][Nb]) {
-            ShiftRow(state, 1, Nb - 1);
-            ShiftRow(state, 2, Nb - 2);
-            ShiftRow(state, 3, Nb - 3);
+        void InvShiftRows(unsigned char state[4][4]) {
+            ShiftRow(state, 1, 4 - 1);
+            ShiftRow(state, 2, 4 - 2);
+            ShiftRow(state, 3, 4 - 3);
         }
 
         void CheckLength(unsigned int len) {
@@ -444,30 +460,30 @@ class AES_V2 {
             unsigned char out[],
             unsigned char *roundKeys
         ) {
-            unsigned char state[4][Nb];
+            unsigned char state[4][4];
             unsigned int i, j, round;
 
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < Nb; j++) {
+                for (j = 0; j < 4; j++) {
                     state[i][j] = in[i + 4 * j];
                 }
             }
 
             AddRoundKey(state, roundKeys);
 
-            for (round = 1; round <= Nr - 1; round++) {
+            for (round = 1; round <= 16 - 1; round++) {
                 SubBytes(state);
                 ShiftRows(state);
                 MixColumns(state);
-                AddRoundKey(state, roundKeys + round * 4 * Nb);
+                AddRoundKey(state, roundKeys + round * 4 * 4);
             }
 
             SubBytes(state);
             ShiftRows(state);
-            AddRoundKey(state, roundKeys + Nr * 4 * Nb);
+            AddRoundKey(state, roundKeys + 16 * 4 * 4);
 
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < Nb; j++) {
+                for (j = 0; j < 4; j++) {
                     out[i + 4 * j] = state[i][j];
                 }
             }
@@ -478,21 +494,21 @@ class AES_V2 {
             unsigned char out[],
             unsigned char *roundKeys
         ) {
-            unsigned char state[4][Nb];
+            unsigned char state[4][4];
             unsigned int i, j, round;
 
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < Nb; j++) {
+                for (j = 0; j < 4; j++) {
                     state[i][j] = in[i + 4 * j];
                 }
             }
 
-            AddRoundKey(state, roundKeys + Nr * 4 * Nb);
+            AddRoundKey(state, roundKeys + 16 * 4 * 4);
 
-            for (round = Nr - 1; round >= 1; round--) {
+            for (round = 16 - 1; round >= 1; round--) {
                 InvSubBytes(state);
                 InvShiftRows(state);
-                AddRoundKey(state, roundKeys + round * 4 * Nb);
+                AddRoundKey(state, roundKeys + round * 4 * 4);
                 InvMixColumns(state);
             }
 
@@ -501,7 +517,7 @@ class AES_V2 {
             AddRoundKey(state, roundKeys);
 
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < Nb; j++) {
+                for (j = 0; j < 4; j++) {
                     out[i + 4 * j] = state[i][j];
                 }
             }
@@ -537,21 +553,12 @@ class AES_V2 {
         }
 
     public:
-        explicit AES_V2(AESKeyLength keyLength = AESKeyLength::AES_256) {
-            switch (keyLength) {
-                case AESKeyLength::AES_128:
-                    this->Nk = 4;
-                    this->Nr = 10;
-                    break;
-                case AESKeyLength::AES_192:
-                    this->Nk = 6;
-                    this->Nr = 12;
-                    break;
-                case AESKeyLength::AES_256:
-                    this->Nk = 8;
-                    this->Nr = 14;
-                    break;
+        explicit AES_V2(string key) {
+            binKey = (isBinaryString(key)) ? key : stringToBinary(key);
+            if (binKey.length() != 128) {
+                throw invalid_argument("Invalid key length");
             }
+            expandedKey = KeyExpansion(binKey);
         }
 
         unsigned char *Encrypt(
@@ -603,12 +610,12 @@ class AES_V2 {
 
 
             unsigned char *out = new unsigned char[newLen];
-            unsigned char *roundKeys = new unsigned char[4 * Nb * (Nr + 1)];
+            unsigned char *roundKeys = new unsigned char[4 * 4 * (16 + 1)];
 
 
-            KeyExpansion(key, roundKeys);
+            // KeyExpansion();
 //            log(tag, "Round key: ");
-//            for (int i = 0; i < 4 * Nb * (Nr + 1); ++i) {
+//            for (int i = 0; i < 4 * 4 * (16 + 1); ++i) {
 //                std::cout << std::hex << (int) roundKeys[i] << " ";
 //                if ((i + 1) % 16 == 0) {
 //                    std::cout << std::endl << std::endl;
@@ -638,8 +645,8 @@ class AES_V2 {
         ) {
             CheckLength(inLen);
             unsigned char *out = new unsigned char[inLen];
-            unsigned char *roundKeys = new unsigned char[4 * Nb * (Nr + 1)];
-            KeyExpansion(key, roundKeys);
+            unsigned char *roundKeys = new unsigned char[4 * 4 * (16 + 1)];
+            // KeyExpansion(key, roundKeys);
             for (unsigned int i = 0; i < inLen; i += blockBytesLen) {
                 DecryptBlock(in + i, out + i, roundKeys);
             }
