@@ -69,23 +69,62 @@ vector<double> measureDecryptRunningTimesInMs(Encryption *encryption, string cip
     return runningTimes;
 }
 
-void measureRunningTime(Encryption *encryption, int nIter) {
+class EvaluationResult {
+public:
+    string cipherName, plainText, cipherText,
+        encryptRunningTimesMeanInMs, encryptRunningTimesPopulationStandardDeviationInMs,
+        decryptRunningTimesMeanInMs, decryptRunningTimesPopulationStandardDeviationInMs;
+
+    EvaluationResult(
+        string cipherName,
+        string plainText,
+        string cipherText,
+        double encryptRunningTimesMeanInMs,
+        double encryptRunningTimesPopulationStandardDeviationInMs,
+        double decryptRunningTimesMeanInMs,
+        double decryptRunningTimesPopulationStandardDeviationInMs
+    ) {
+        this->cipherName = cipherName;
+        this->plainText = this->parseStringToInts(plainText);
+        this->cipherText = this->parseStringToInts(cipherText);
+        this->encryptRunningTimesMeanInMs = to_string(encryptRunningTimesMeanInMs);
+        this->encryptRunningTimesPopulationStandardDeviationInMs = to_string(encryptRunningTimesPopulationStandardDeviationInMs);
+        this->decryptRunningTimesMeanInMs = to_string(decryptRunningTimesMeanInMs);
+        this->decryptRunningTimesPopulationStandardDeviationInMs = to_string(decryptRunningTimesPopulationStandardDeviationInMs);
+    }
+
+private:
+    string parseStringToInts(string str) {
+        string result;
+        for(int i = 0; i < str.size(); i++) {
+            result += to_string((int) str[i]);
+            if(i < str.size() - 1) {
+                result += ' ';
+            }
+        }
+        return result;
+    }
+};
+
+// TODO: tidy this code
+vector<EvaluationResult> evaluate(Encryption *encryption, int nIter, string cipherName) {
     vector<int> plainTextLengths;
 
     for(int i = 5; i <= 16; i++) {
         plainTextLengths.push_back(pow(2, i));
     }
 
-    string cipherText, decryptedCipherText;
     vector<string> plainTexts;
-    vector<double> encryptRunningTimesInMs, decryptRunningTimesInMs;
-    double encryptRunningTimesMeanInMs, encryptRunningTimesPopulationStandardDeviationInMs,
-        decryptRunningTimesMeanInMs, decryptRunningTimesPopulationStandardDeviationInMs;
-
     for(int i = 0; i < plainTextLengths.size(); i++) {
 //        plainTexts.push_back(generateRandomPlainText(plainTextLengths[i]));
         plainTexts.push_back(generatePeriodicPlainText(plainTextLengths[i]));
     }
+
+    string cipherText, decryptedCipherText;
+    vector<double> encryptRunningTimesInMs, decryptRunningTimesInMs;
+    double encryptRunningTimesMeanInMs, encryptRunningTimesPopulationStandardDeviationInMs,
+        decryptRunningTimesMeanInMs, decryptRunningTimesPopulationStandardDeviationInMs;
+    vector<EvaluationResult> evaluationResults;
 
     for(int i = 0; i < plainTexts.size(); i++) {
         // Run encrypt once to get the cipherText
@@ -99,29 +138,55 @@ void measureRunningTime(Encryption *encryption, int nIter) {
         decryptRunningTimesMeanInMs = calculateMean(decryptRunningTimesInMs);
         decryptRunningTimesPopulationStandardDeviationInMs = calculatePopulationStandardDeviation(decryptRunningTimesInMs, decryptRunningTimesMeanInMs);
 
-        printf("case #%d (size: %d): {enc: {mean: %.3lfms, stddev_p: %.3lfms}, dec: {mean: %.3lfms, stddev_p: %.3lfms}}\n",
-            i,
-            plainTexts[i].size(),
+        evaluationResults.push_back(EvaluationResult(
+            cipherName,
+            plainTexts[i],
+            cipherText,
             encryptRunningTimesMeanInMs,
             encryptRunningTimesPopulationStandardDeviationInMs,
             decryptRunningTimesMeanInMs,
             decryptRunningTimesPopulationStandardDeviationInMs
-        );
+        ));
     }
+
+    return evaluationResults;
+}
+
+string getCurrentTimeString() {
+    time_t rawTime;
+    time(&rawTime);
+    return strtok(ctime(&rawTime), "\n");
+}
+
+void dumpResult(vector<EvaluationResult> evaluationResults){
+    ofstream file;
+    char fileName[128], filePath[128];
+    string currentTimeString = getCurrentTimeString();
+
+    replace(currentTimeString.begin(), currentTimeString.end(), ':', ' ');
+    sprintf(fileName, "%s_evaluation_result.txt", currentTimeString.c_str());
+    sprintf(filePath, "./dumps/%s", fileName);
+
+    file.open(filePath);
+    for(int i = 0; i < evaluationResults.size(); i++) {
+        file << evaluationResults[i].cipherName + '\n';
+        file << evaluationResults[i].plainText + '\n';
+        file << evaluationResults[i].cipherText + '\n';
+        file << evaluationResults[i].encryptRunningTimesMeanInMs + ' '
+            + evaluationResults[i].encryptRunningTimesPopulationStandardDeviationInMs + '\n';
+        file << evaluationResults[i].decryptRunningTimesMeanInMs + ' '
+            + evaluationResults[i].decryptRunningTimesPopulationStandardDeviationInMs + '\n';
+    }
+    file.close();
 }
 
 int main() {
     srand(time(0));
     string key = "8_chars_";
 
-    // TODO: tidy this
-    cout << "RC4" << endl;
-    measureRunningTime(new ARC4(key), 10);
-    cout << endl;
+//    dumpResult(evaluate(new ARC4(key), 10, "rc4"));
 
-    cout << "DES" << endl;
-    measureRunningTime(new DES(key), 10);
-    cout << endl;
+    dumpResult(evaluate(new DES(key), 10, "des"));
 
     return 0;
 }
