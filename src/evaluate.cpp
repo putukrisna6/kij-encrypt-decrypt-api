@@ -5,10 +5,10 @@
 #include "algorithms/helpers/generator.h"
 using namespace std;
 
-const double ONE_SEC_TO_MILISEC = 1000.0;
+const double ONE_SEC_TO_MILLISEC = 1000.0;
 
 double calculateElapsedTimeInMs(clock_t startTime, clock_t endTime) {
-    return ((double) (endTime - startTime)) / CLOCKS_PER_SEC * ONE_SEC_TO_MILISEC;
+    return ((double) (endTime - startTime)) / CLOCKS_PER_SEC * ONE_SEC_TO_MILLISEC;
 }
 
 double calculateEncryptAverageRunningTimeInMs(Encryption *encryption, string plainText, int nIter) {
