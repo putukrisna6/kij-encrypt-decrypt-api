@@ -69,7 +69,7 @@ vector<double> measureDecryptRunningTimesInMs(Encryption *encryption, string cip
     return runningTimes;
 }
 
-void measureRunningTime(Encryption *encryption) {
+void measureRunningTime(Encryption *encryption, int nIter) {
     vector<int> plainTextLengths;
 
     for(int i = 5; i <= 16; i++) {
@@ -91,11 +91,11 @@ void measureRunningTime(Encryption *encryption) {
         // Run encrypt once to get the cipherText
         cipherText = encryption->encrypt(plainTexts[i]);
 
-        encryptRunningTimesInMs = measureEncryptRunningTimesInMs(encryption, plainTexts[i], 10);
+        encryptRunningTimesInMs = measureEncryptRunningTimesInMs(encryption, plainTexts[i], nIter);
         encryptRunningTimesMeanInMs = calculateMean(encryptRunningTimesInMs);
         encryptRunningTimesPopulationStandardDeviationInMs = calculatePopulationStandardDeviation(encryptRunningTimesInMs, encryptRunningTimesMeanInMs);
 
-        decryptRunningTimesInMs = measureDecryptRunningTimesInMs(encryption, cipherText, 10);
+        decryptRunningTimesInMs = measureDecryptRunningTimesInMs(encryption, cipherText, nIter);
         decryptRunningTimesMeanInMs = calculateMean(decryptRunningTimesInMs);
         decryptRunningTimesPopulationStandardDeviationInMs = calculatePopulationStandardDeviation(decryptRunningTimesInMs, decryptRunningTimesMeanInMs);
 
@@ -116,11 +116,11 @@ int main() {
 
     // TODO: tidy this
     cout << "RC4" << endl;
-    measureRunningTime(new ARC4(key));
+    measureRunningTime(new ARC4(key), 10);
     cout << endl;
 
     cout << "DES" << endl;
-    measureRunningTime(new DES(key));
+    measureRunningTime(new DES(key), 10);
     cout << endl;
 
     return 0;
