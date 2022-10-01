@@ -63,10 +63,14 @@ string hexToBin(string s) {
     return bin;
 }
 
+string byteToBinary(char b) {
+    return bitset<8>(b).to_string();
+}
+
 string stringToBinary(string s) {
     string bin = "";
     for (char &_char : s) {
-        bin += bitset<8>(_char).to_string();
+        bin += byteToBinary(_char);
     }
     return bin;
 }
