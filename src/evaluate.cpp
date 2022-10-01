@@ -34,7 +34,7 @@ double calculatePopulationStandardDeviation(vector<double> data, double mean) {
     size_t n = data.size();
     double sum = 0.0;
 
-    for(int i = 0; i < n; i++) {
+    for(size_t i = 0; i < n; i++) {
         sum += (data[i] - mean) * (data[i] - mean);
     }
 
@@ -108,14 +108,14 @@ private:
 
 // TODO: tidy this code
 vector<EvaluationResult> evaluate(Encryption *encryption, int nIter, string cipherName) {
-    vector<int> plainTextLengths;
+    vector<size_t> plainTextLengths;
 
-    for(int i = 5; i <= 16; i++) {
+    for(size_t i = 5; i <= 16; i++) {
         plainTextLengths.push_back(pow(2, i));
     }
 
     vector<string> plainTexts;
-    for(int i = 0; i < plainTextLengths.size(); i++) {
+    for(size_t i = 0; i < plainTextLengths.size(); i++) {
 //        plainTexts.push_back(generateRandomPlainText(plainTextLengths[i]));
         plainTexts.push_back(generatePeriodicPlainText(plainTextLengths[i]));
     }
@@ -126,7 +126,7 @@ vector<EvaluationResult> evaluate(Encryption *encryption, int nIter, string ciph
         decryptRunningTimesMeanInMs, decryptRunningTimesPopulationStandardDeviationInMs;
     vector<EvaluationResult> evaluationResults;
 
-    for(int i = 0; i < plainTexts.size(); i++) {
+    for(size_t i = 0; i < plainTexts.size(); i++) {
         // Run encrypt once to get the cipherText
         cipherText = encryption->encrypt(plainTexts[i]);
 
@@ -168,7 +168,7 @@ void dumpResult(vector<EvaluationResult> evaluationResults){
     sprintf(filePath, "./dumps/%s", fileName);
 
     file.open(filePath);
-    for(int i = 0; i < evaluationResults.size(); i++) {
+    for(size_t i = 0; i < evaluationResults.size(); i++) {
         file << evaluationResults[i].cipherName + '\n';
         file << evaluationResults[i].plainText + '\n';
         file << evaluationResults[i].cipherText + '\n';
