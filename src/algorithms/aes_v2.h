@@ -250,69 +250,8 @@ class AES_V2 {
     private:
         string binKey;
         string expandedKey;
-        bool isLogActive = true;
+        bool isLogActive = false;
         static constexpr unsigned int blockBytesLen = 4 * 4 * sizeof(unsigned char);
-
-
-        string SubBytes(string plainText) {
-            unsigned int i, j;
-            string result;
-
-            for (i = 0; i < 4; i++) {
-                string word = plainText.substr(i * 32, 32);
-                result += SubWord(word);
-            }
-
-            return result;
-        }
-
-        string ShiftRows(string text) {
-            string result, result2;
-
-            for (int i = 0; i < 4; ++i) {
-                string word;
-                for (int j = 0; j < 4; ++j) {
-                    word += text.substr((j * 32) + i * 8, 8);
-                }
-                result += shiftLeft(word, i * 8);
-            }
-
-            for (int i = 0; i < 4; ++i) {
-                string word;
-                for (int j = 0; j < 4; ++j) {
-                    word += result.substr((j * 32) + i * 8, 8);
-                }
-                result2 += word;
-            }
-            return result2;
-        }
-
-        unsigned char xtime(unsigned char b) {
-            return (b << 1) ^ (((b >> 7) & 1) * 0x1b);
-        } // multiply on x
-
-        void MixColumns(unsigned char state[4][4]) {
-            unsigned char temp_state[4][4];
-
-            for (size_t i = 0; i < 4; ++i) {
-                memset(temp_state[i], 0, 4);
-            }
-
-            for (size_t i = 0; i < 4; ++i) {
-                for (size_t k = 0; k < 4; ++k) {
-                    for (size_t j = 0; j < 4; ++j) {
-                        if (CMDS[i][k] == 1)
-                            temp_state[i][j] ^= state[k][j];
-                        else
-                            temp_state[i][j] ^= GF_MUL_TABLE[CMDS[i][k]][state[k][j]];
-                    }
-                }
-            }
-
-            for (size_t i = 0; i < 4; ++i) {
-                memcpy(state[i], temp_state[i], 4);
-            }
-        }
 
         /**
         * @brief Do S-box permutation.
@@ -378,7 +317,12 @@ class AES_V2 {
             return res;
         }
 
-        /**
+        unsigned char xtime(unsigned char b) {
+            return (b << 1) ^ (((b >> 7) & 1) * 0x1b);
+        } // multiply on x
+
+
+    /**
          * @brief Expand key
          * 
          * On AES 128, it will takes 16-byte (16 char) key 
@@ -416,39 +360,142 @@ class AES_V2 {
             return res;
         }
 
-        void InvSubBytes(unsigned char state[4][4]) {
-            unsigned int i, j;
-            unsigned char t;
+        string SubBytes(string plainText) {
+            unsigned int i;
+            string result;
+
             for (i = 0; i < 4; i++) {
-                for (j = 0; j < 4; j++) {
-                    t = state[i][j];
-                    state[i][j] = inv_sbox[t / 16][t % 16];
-                }
+                string word = plainText.substr(i * 32, 32);
+                result += SubWord(word);
             }
+
+            return result;
         }
 
-        void InvMixColumns(unsigned char state[4][4]) {
-            unsigned char temp_state[4][4];
+        string InvSubBytes(string cipherText) {
+            string result;
 
-            for (size_t i = 0; i < 4; ++i) {
-                memset(temp_state[i], 0, 4);
+            for (int i = 0; i < 4; i++) {
+                string word = cipherText.substr(i * 32, 32);
+                string temp;
+                for (int j = 0; j < 4; j++) {
+                    int decimal = binaryToDecimal(word.substr(j * 8, 8));
+                    temp += byteToBinary(inv_sbox[decimal / 16][decimal % 16]);;
+                }
+                result += temp;
             }
 
-            for (size_t i = 0; i < 4; ++i) {
-                for (size_t k = 0; k < 4; ++k) {
-                    for (size_t j = 0; j < 4; ++j) {
-                        temp_state[i][j] ^= GF_MUL_TABLE[INV_CMDS[i][k]][state[k][j]];
-                    }
+            return result;
+        }
+
+        string MixColumns(string text) {
+            string result;
+            bitset<8> mtx[4 * 4];
+            bitset<8> arr[4];
+
+            int l = 0;
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    bitset<8> byte = stringBinaryToBitset(text.substr((j * 32) + i * 8, 8));
+                    mtx[l] = byte;
+                    l++;
                 }
             }
 
-            for (size_t i = 0; i < 4; ++i) {
-                memcpy(state[i], temp_state[i], 4);
+            for(int i=0; i<4; ++i) {
+                for(int j=0; j<4; ++j) { // Take one row from 4x4 matrix
+                    arr[j] = mtx[i + j * 4];
+                }
+
+                mtx[i] = GaloisFieldMul(0x02, arr[0]) ^ GaloisFieldMul(0x03, arr[1]) ^ arr[2] ^ arr[3];
+                mtx[i+4] = arr[0] ^ GaloisFieldMul(0x02, arr[1]) ^ GaloisFieldMul(0x03, arr[2]) ^ arr[3];
+                mtx[i+8] = arr[0] ^ arr[1] ^ GaloisFieldMul(0x02, arr[2]) ^ GaloisFieldMul(0x03, arr[3]);
+                mtx[i+12] = GaloisFieldMul(0x03, arr[0]) ^ arr[1] ^ arr[2] ^ GaloisFieldMul(0x02, arr[3]);
             }
+
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    result += mtx[i + (j * 4)].to_string();
+                }
+            }
+
+            return result;
         }
 
-        void InvShiftRows(unsigned char state[4][4]) {
+        string InvMixColumns(string cipherText) {
+            string result;
+            bitset<8> mtx[4 * 4];
+            bitset<8> arr[4];
 
+            int l = 0;
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    bitset<8> byte = stringBinaryToBitset(cipherText.substr((j * 32) + i * 8, 8));
+                    mtx[l] = byte;
+                    l++;
+                }
+            }
+
+            for(int i=0; i<4; ++i) {
+                for(int j=0; j<4; ++j) {
+                    arr[j] = mtx[i + j * 4];
+                }
+
+                mtx[i] = GaloisFieldMul(0x0e, arr[0]) ^ GaloisFieldMul(0x0b, arr[1]) ^ GaloisFieldMul(0x0d, arr[2]) ^ GaloisFieldMul(0x09, arr[3]);
+                mtx[i+4] = GaloisFieldMul(0x09, arr[0]) ^ GaloisFieldMul(0x0e, arr[1]) ^ GaloisFieldMul(0x0b, arr[2]) ^ GaloisFieldMul(0x0d, arr[3]);
+                mtx[i+8] = GaloisFieldMul(0x0d, arr[0]) ^ GaloisFieldMul(0x09, arr[1]) ^ GaloisFieldMul(0x0e, arr[2]) ^ GaloisFieldMul(0x0b, arr[3]);
+                mtx[i+12] = GaloisFieldMul(0x0b, arr[0]) ^ GaloisFieldMul(0x0d, arr[1]) ^ GaloisFieldMul(0x09, arr[2]) ^ GaloisFieldMul(0x0e, arr[3]);
+            }
+
+            for (int i = 0; i < 4; ++i) {
+                for (int j = 0; j < 4; ++j) {
+                    result += mtx[i + (j * 4)].to_string();
+                }
+            }
+
+            return result;
+        }
+
+        string ShiftRows(string text) {
+            string result, result2;
+
+            for (int i = 0; i < 4; ++i) {
+                string word;
+                for (int j = 0; j < 4; ++j) {
+                    word += text.substr((j * 32) + i * 8, 8);
+                }
+                result += shiftLeft(word, i * 8);
+            }
+
+            for (int i = 0; i < 4; ++i) {
+                string word;
+                for (int j = 0; j < 4; ++j) {
+                    word += result.substr((j * 32) + i * 8, 8);
+                }
+                result2 += word;
+            }
+            return result2;
+        }
+
+        string InvShiftRows(string cipherText) {
+            string result, result2;
+
+            for (int i = 0; i < 4; ++i) {
+                string word;
+                for (int j = 0; j < 4; ++j) {
+                    word += cipherText.substr((j * 32) + i * 8, 8);
+                }
+                result += shiftRight(word, i * 8);
+            }
+
+            for (int i = 0; i < 4; ++i) {
+                string word;
+                for (int j = 0; j < 4; ++j) {
+                    word += result.substr((j * 32) + i * 8, 8);
+                }
+                result2 += word;
+            }
+            return result2;
         }
 
         void CheckLength(unsigned int len) {
@@ -463,64 +510,97 @@ class AES_V2 {
 
 
         /**
-         * Encrypt a single block of text
+         * Encrypt a single block (128-bit) of Binary String
          *
          * @param text
          * @return
          */
-        string EncryptBlock(
-            string text
-        ) {
+        string EncryptBlock(string text) {
             string tag = "EncryptBlock";
             string result;
-            unsigned char state[4][4];
-            unsigned int i, j, round;
+            unsigned int round;
 
 
-            string keyRoundOne = expandedKey.substr(0, 128);
-            result = AddRoundKey(text, keyRoundOne);
+            string key = expandedKey.substr(0, 128);
+            result = AddRoundKey(text, key);
+            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
-            log(tag, "AddRoundKey: ");
-            for (int k = 0; k < result.length() / 32; k++) {
-                this->log(tag, binToHex(result.substr(k * 32, 32)));
+            for (round = 1; round <= 9; round++) {
+                this->log("EncryptBlock", "Round " + to_string(round) + "\n");
+
+                result = SubBytes(result);
+                log128BitBinaryStringAs32BitEachRow("SubBytes", result);
+
+                result = ShiftRows(result);
+                log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+
+                result = MixColumns(result);
+                log128BitBinaryStringAs32BitEachRow("MixColumns", result);
+
+                // Get current Round of Key from expandedKey
+                string nextRoundKey = expandedKey.substr(round * 128, 128);
+                result = AddRoundKey(result, nextRoundKey);
+                log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+
+                log("", "\n\n");
             }
-
 
             result = SubBytes(result);
-            log(tag, "SubBytes: ");
-            for (int k = 0; k < result.length() / 32; k++) {
-                this->log(tag, binToHex(result.substr(k * 32, 32)));
-            }
+            log128BitBinaryStringAs32BitEachRow("SubBytes", result);
 
             result = ShiftRows(result);
-            log(tag, "ShiftRows: ");
-            for (int k = 0; k < result.length() / 32; k++) {
-                this->log(tag, binToHex(result.substr(k * 32, 32)));
-            }
-//            for (round = 1; round <= 16 - 1; round++) {
-//                SubBytes(state);
-//                ShiftRows(state);
-//                MixColumns(state);
-//                AddRoundKey(state, roundKeys + round * 4 * 4);
-//            }
-//
-//            SubBytes(state);
-//            ShiftRows(state);
-//            AddRoundKey(state, roundKeys + 16 * 4 * 4);
-//
-//            for (i = 0; i < 4; i++) {
-//                for (j = 0; j < 4; j++) {
-//                    out[i + 4 * j] = state[i][j];
-//                }
-//            }
+            log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+
+            string nextRoundKey = expandedKey.substr(round * 128, 128);
+            result = AddRoundKey(result, nextRoundKey);
+            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+
             return result;
         }
 
-        void DecryptBlock(
-            const unsigned char in[],
-            unsigned char out[],
-            unsigned char *roundKeys
-        ) {
+        string DecryptBlock(string cipherText) {
+            string tag = "DecryptBlock";
+            string result;
+            unsigned int round;
+
+            log(tag, "Expanded key length: " + to_string(expandedKey.length()));
+            string key = expandedKey.substr(10 * 128, 128);
+            result = AddRoundKey(cipherText, key);
+//            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+
+            for (round = 1; round <= 9; round++) {
+//                this->log("EncryptBlock", "Round " + to_string(round) + "\n");
+
+                result = InvShiftRows(result);
+//                log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+
+                result = InvSubBytes(result);
+//                log128BitBinaryStringAs32BitEachRow("SubBytes", result);
+
+                // Get current Round of Key from expandedKey
+                string nextRoundKey = expandedKey.substr((10 - round) * 128, 128);
+                result = AddRoundKey(result, nextRoundKey);
+//                log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+
+
+                result = InvMixColumns(result);
+//                log128BitBinaryStringAs32BitEachRow("MixColumns", result);
+
+//                log("", "\n\n");
+            }
+
+            result = InvShiftRows(result);
+//            log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+
+            result = InvSubBytes(result);
+//            log128BitBinaryStringAs32BitEachRow("SubBytes", result);
+
+            string nextRoundKey = expandedKey.substr(0, 128);
+            result = AddRoundKey(result, nextRoundKey);
+//            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+
+            return result;
+
 //            unsigned char state[4][4];
 //            unsigned int i, j, round;
 //
@@ -579,6 +659,12 @@ class AES_V2 {
             }
         }
 
+        void log128BitBinaryStringAs32BitEachRow(string tag, string message) {
+            for (int k = 0; k < message.length() / 32; k++) {
+                this->log(tag, binToHex(message.substr(k * 32, 32)));
+            }
+        }
+
     public:
         explicit AES_V2(string key) {
             binKey = (isBinaryString(key)) ? key : stringToBinary(key);
@@ -588,18 +674,15 @@ class AES_V2 {
             expandedKey = KeyExpansion(binKey);
         }
 
-        string Encrypt(
-            string plainText
-        ) {
+        string Encrypt(string plainText) {
             std::string tag = "Encrypt()";
             log(tag, "==== Begin Encrypting ====");
 //            log(tag, "inLen: " + std::to_string(inLen));
-
-            int inLen = plainText.length();
-            unsigned char padding = blockBytesLen - (inLen % blockBytesLen);
-            int newLen = (std::ceil(inLen / (double) blockBytesLen) * blockBytesLen);
+//            for (int k = 0; k < plainText.length() / 32; k++) {
+//                cout << "Plain Text - " << binToHex(plainText.substr(k * 32, 32)) << endl;
+//            }
 //
-            CheckLength(newLen);
+            CheckLength(plainText.length());
 //            unsigned char *newIn = new unsigned char[newLen];
 //            for (int i = 0; i < newLen; ++i) {
 //                if (i < inLen) {
@@ -614,31 +697,29 @@ class AES_V2 {
 
 //            for (unsigned int i = 0; i < newLen; i += blockBytesLen) {
                 string result = EncryptBlock(plainText);
-                for (int i = 0; i < result.length() / 32; i++) {
-                    this->log(tag, binToHex(result.substr(i * 32, 32)));
-                }
+                log128BitBinaryStringAs32BitEachRow(tag, result);
 //            }
 
             this->log(tag, "==== Encrypt Finished ====");
             return result;
         }
 
-        unsigned char *Decrypt(
-            const unsigned char in[],
-            unsigned int inLen,
-            const unsigned char key[]
-        ) {
-            CheckLength(inLen);
-            unsigned char *out = new unsigned char[inLen];
-            unsigned char *roundKeys = new unsigned char[4 * 4 * (16 + 1)];
+        string Decrypt(string cipherText) {
+            std::string tag = "Decrypt()";
+            log(tag, "==== Begin Decrypting ====");
+            log128BitBinaryStringAs32BitEachRow("Cipher Text", cipherText);
+
+//            CheckLength(inLen);
+//            unsigned char *out = new unsigned char[inLen];
+//            unsigned char *roundKeys = new unsigned char[4 * 4 * (16 + 1)];
             // KeyExpansion(key, roundKeys);
-            for (unsigned int i = 0; i < inLen; i += blockBytesLen) {
-                DecryptBlock(in + i, out + i, roundKeys);
-            }
+//            for (unsigned int i = 0; i < inLen; i += blockBytesLen) {
+                string result = DecryptBlock(cipherText);
+                log128BitBinaryStringAs32BitEachRow("Decrypt result", result);
+//            }
 
-            delete[] roundKeys;
-
-            return out;
+            log(tag, "==== Decrypt Finished ====");
+            return result;
         }
 
 //        unsigned char *EncryptCBC(const unsigned char in[], unsigned int inLen,
