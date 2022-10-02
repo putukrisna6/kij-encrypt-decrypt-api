@@ -141,4 +141,17 @@ bool isBinaryString(string str) {
     return true; 
 }
 
+/**
+ * Convert String of binary to a bitset<8>
+ *
+ * @param binaryString
+ * @return 8 bit in form of bitset
+ */
+bitset<8> stringBinaryToBitset(string binaryString) {
+    if (!isBinaryString(binaryString)) {
+        throw runtime_error("Text is not binary string");
+    }
+    bitset<8> binary(binaryString);
+    return binary;
+}
 #endif
