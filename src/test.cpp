@@ -36,7 +36,7 @@ void Encryption_WhenCipherTextIsDecrypted_ResultEqualsToPlainText(Encryption *en
 
 int main() {
     srand(time(0));
-    string key = "8_chars_";
+    const string key = "8_chars_";
 
     // TODO: tidy this
     cout << "RC4" << endl;
