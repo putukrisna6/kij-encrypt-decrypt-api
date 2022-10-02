@@ -6,24 +6,76 @@
 #include <cmath>
 using namespace std;
 
-string shiftLeft(string s, int shifts) {
+/**
+ * @brief Shift each char in string.
+ *
+ * If shifts > 0, then the string will be shifted left.
+ * Otherwise, the string will be shifted right.
+ *
+ * @param s
+ * @param shifts
+ * @return
+ */
+string shift(string s, int shifts) {
     size_t length = s.length();
+    size_t absShifts = abs(shifts);
 
-    if (shifts % length == 0) {
+    if (absShifts % length == 0) {
         return s;
+    }
+
+    if (shifts < 0) {
+        absShifts = length - absShifts;
     }
 
     string res = "";
     for (
-        size_t j = 0, currIndex = shifts % length;
-        j < length;
-        j++, currIndex = (currIndex + 1) % length)
+            size_t j = 0, currIndex = absShifts % length;
+            j < length;
+            j++, currIndex = (currIndex + 1) % length)
     {
         res += s[currIndex];
     }
 
     return res;
 }
+
+string shiftLeft(string s, unsigned int shifts) {
+    return shift(s, shifts);
+}
+
+string shiftRight(string s, unsigned int shifts) {
+    return shift(s, shifts * -1);
+}
+
+/**
+ * i | n | g | o | b | l
+ * n | g | o | b | l | i
+ *
+ * g | o | b | l | i | n
+ *
+ * o | b | l | i | n | g
+ * b | l | i | n | g | o
+ */
+
+//string shiftRight(string s, int shifts) {
+//    size_t length = s.length();
+//
+//    if (shifts % length == 0) {
+//        return s;
+//    }
+//
+//    string res = "";
+//    for (
+//            size_t j = 0, currIndex = shifts % length;
+//            j < length;
+//            j++, currIndex = (currIndex + 1) % length
+//    ){
+//        res += s[currIndex];
+//    }
+//
+//    return res;
+//}
 
 string XOR(string a, string b) {
     string res = "";
@@ -136,6 +188,30 @@ vector<string> splitIntoBlocks(string binaries, int blockSize) {
         blocks.push_back(block);
     }
     return blocks;
+}
+
+/**
+ *  Multiplication over Finite Fields GF(2^8)
+ *
+ *
+ *  @param first 8-bit binary string
+ *  @param second 8-bit binary string
+ */
+bitset<8> GaloisFieldMul(bitset<8> a, bitset<8> b) {
+    bitset<8> p = 0;
+    bitset<8> hi_bit_set;
+    for (int counter = 0; counter < 8; counter++) {
+        if ((b & bitset<8>(1)) != 0) {
+            p = p ^ a;
+        }
+        hi_bit_set = (bitset<8>) (a & bitset<8>(0x80));
+        a = a << 1;
+        if (hi_bit_set != 0) {
+            a = a ^ (bitset<8>) 0x1b; /* x^8 + x^4 + x^3 + x + 1 */
+        }
+        b = b >> 1;
+    }
+    return p;
 }
 
 #endif
