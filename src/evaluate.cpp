@@ -163,7 +163,7 @@ void dumpResult(vector<EvaluationResult> evaluationResults){
         file << evaluationResults[i].encryptRunningTimesMeanInMs
             + ' ' + evaluationResults[i].encryptRunningTimesPopulationStandardDeviationInMs
             + ' ' + evaluationResults[i].nIter + '\n';
-        file << evaluationResults[i].decryptRunningTimesMeanInMs + ' '
+        file << evaluationResults[i].decryptRunningTimesMeanInMs
             + ' ' + evaluationResults[i].decryptRunningTimesPopulationStandardDeviationInMs
             + ' ' + evaluationResults[i].nIter + '\n';
     }
@@ -185,7 +185,7 @@ int main() {
     const string key = "8_chars_";
 
     vector<size_t> plainTextLengths;
-    for(int i = 5; i <= 6; i++) {
+    for(int i = 5; i <= 16; i++) {
         plainTextLengths.push_back(pow(2, i));
     }
     vector<string> plainTexts = generatePlainTexts(new PeriodicPlainTextGenerator(), plainTextLengths);
