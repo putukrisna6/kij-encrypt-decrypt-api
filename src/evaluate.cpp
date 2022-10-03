@@ -5,10 +5,10 @@
 #include "algorithms/helpers/generator.h"
 using namespace std;
 
-const double ONE_SEC_TO_MILLISEC = 1000.0;
+const double ONE_SEC_IN_MILLISEC = 1000.0;
 
 double calculateElapsedTimeInMs(clock_t startTime, clock_t endTime) {
-    return ((double) (endTime - startTime)) / CLOCKS_PER_SEC * ONE_SEC_TO_MILLISEC;
+    return ((double) (endTime - startTime)) / CLOCKS_PER_SEC * ONE_SEC_IN_MILLISEC;
 }
 
 double calculateMean(vector<double> data) {
@@ -73,7 +73,8 @@ class EvaluationResult {
 public:
     string cipherName, plainText, cipherText,
         encryptRunningTimesMeanInMs, encryptRunningTimesPopulationStandardDeviationInMs,
-        decryptRunningTimesMeanInMs, decryptRunningTimesPopulationStandardDeviationInMs;
+        decryptRunningTimesMeanInMs, decryptRunningTimesPopulationStandardDeviationInMs,
+        nIter;
 
     EvaluationResult(
         string cipherName,
@@ -82,19 +83,21 @@ public:
         double encryptRunningTimesMeanInMs,
         double encryptRunningTimesPopulationStandardDeviationInMs,
         double decryptRunningTimesMeanInMs,
-        double decryptRunningTimesPopulationStandardDeviationInMs
+        double decryptRunningTimesPopulationStandardDeviationInMs,
+        int nIter
     ) {
         this->cipherName = cipherName;
-        this->plainText = this->parseStringToInts(plainText);
-        this->cipherText = this->parseStringToInts(cipherText);
+        this->plainText = this->convertStringToInts(plainText);
+        this->cipherText = this->convertStringToInts(cipherText);
         this->encryptRunningTimesMeanInMs = to_string(encryptRunningTimesMeanInMs);
         this->encryptRunningTimesPopulationStandardDeviationInMs = to_string(encryptRunningTimesPopulationStandardDeviationInMs);
         this->decryptRunningTimesMeanInMs = to_string(decryptRunningTimesMeanInMs);
         this->decryptRunningTimesPopulationStandardDeviationInMs = to_string(decryptRunningTimesPopulationStandardDeviationInMs);
+        this->nIter = to_string(nIter);
     }
 
 private:
-    string parseStringToInts(string str) {
+    string convertStringToInts(string str) {
         string result;
         for(size_t i = 0; i < str.size(); i++) {
             result += to_string((unsigned char) str[i]);
@@ -107,23 +110,19 @@ private:
 };
 
 vector<EvaluationResult> evaluate(Encryption *encryption, vector<string> plainTexts, string cipherName, int nIter) {
-    string cipherText, decryptedCipherText;
-    vector<double> encryptRunningTimesInMs, decryptRunningTimesInMs;
-    double encryptRunningTimesMeanInMs, encryptRunningTimesPopulationStandardDeviationInMs,
-        decryptRunningTimesMeanInMs, decryptRunningTimesPopulationStandardDeviationInMs;
     vector<EvaluationResult> evaluationResults;
 
     for(size_t i = 0; i < plainTexts.size(); i++) {
         // Run encrypt once to get the cipherText
-        cipherText = encryption->encrypt(plainTexts[i]);
+        string cipherText = encryption->encrypt(plainTexts[i]);
 
-        encryptRunningTimesInMs = measureEncryptRunningTimesInMs(encryption, plainTexts[i], nIter);
-        encryptRunningTimesMeanInMs = calculateMean(encryptRunningTimesInMs);
-        encryptRunningTimesPopulationStandardDeviationInMs = calculatePopulationStandardDeviation(encryptRunningTimesInMs, encryptRunningTimesMeanInMs);
+        vector<double> encryptRunningTimesInMs = measureEncryptRunningTimesInMs(encryption, plainTexts[i], nIter);
+        double encryptRunningTimesMeanInMs = calculateMean(encryptRunningTimesInMs);
+        double encryptRunningTimesPopulationStandardDeviationInMs = calculatePopulationStandardDeviation(encryptRunningTimesInMs, encryptRunningTimesMeanInMs);
 
-        decryptRunningTimesInMs = measureDecryptRunningTimesInMs(encryption, cipherText, nIter);
-        decryptRunningTimesMeanInMs = calculateMean(decryptRunningTimesInMs);
-        decryptRunningTimesPopulationStandardDeviationInMs = calculatePopulationStandardDeviation(decryptRunningTimesInMs, decryptRunningTimesMeanInMs);
+        vector<double> decryptRunningTimesInMs = measureDecryptRunningTimesInMs(encryption, cipherText, nIter);
+        double decryptRunningTimesMeanInMs = calculateMean(decryptRunningTimesInMs);
+        double decryptRunningTimesPopulationStandardDeviationInMs = calculatePopulationStandardDeviation(decryptRunningTimesInMs, decryptRunningTimesMeanInMs);
 
         evaluationResults.push_back(EvaluationResult(
             cipherName,
@@ -132,7 +131,8 @@ vector<EvaluationResult> evaluate(Encryption *encryption, vector<string> plainTe
             encryptRunningTimesMeanInMs,
             encryptRunningTimesPopulationStandardDeviationInMs,
             decryptRunningTimesMeanInMs,
-            decryptRunningTimesPopulationStandardDeviationInMs
+            decryptRunningTimesPopulationStandardDeviationInMs,
+            nIter
         ));
     }
 
@@ -155,35 +155,48 @@ void dumpResult(vector<EvaluationResult> evaluationResults){
     sprintf(filePath, "./dumps/%s", fileName);
 
     file.open(filePath);
+
     for(size_t i = 0; i < evaluationResults.size(); i++) {
         file << evaluationResults[i].cipherName + '\n';
         file << evaluationResults[i].plainText + '\n';
         file << evaluationResults[i].cipherText + '\n';
-        file << evaluationResults[i].encryptRunningTimesMeanInMs + ' '
-            + evaluationResults[i].encryptRunningTimesPopulationStandardDeviationInMs + '\n';
+        file << evaluationResults[i].encryptRunningTimesMeanInMs
+            + ' ' + evaluationResults[i].encryptRunningTimesPopulationStandardDeviationInMs
+            + ' ' + evaluationResults[i].nIter + '\n';
         file << evaluationResults[i].decryptRunningTimesMeanInMs + ' '
-            + evaluationResults[i].decryptRunningTimesPopulationStandardDeviationInMs + '\n';
+            + ' ' + evaluationResults[i].decryptRunningTimesPopulationStandardDeviationInMs
+            + ' ' + evaluationResults[i].nIter + '\n';
     }
+
     file.close();
+}
+
+vector<EvaluationResult> combineEvaluationResults(vector<vector<EvaluationResult>> evaluationResults) {
+    vector<EvaluationResult> results;
+    for(size_t i = 0; i < evaluationResults.size(); i++) {
+        results.insert(results.end(), evaluationResults[i].begin(), evaluationResults[i].end());
+    }
+    return results;
 }
 
 int main() {
     srand(time(0));
 
     const string key = "8_chars_";
-    vector<EvaluationResult> rc4Results, desResults, results;
 
     vector<size_t> plainTextLengths;
-    for(int i = 5; i <= 16; i++) {
+    for(int i = 5; i <= 6; i++) {
         plainTextLengths.push_back(pow(2, i));
     }
     vector<string> plainTexts = generatePlainTexts(new PeriodicPlainTextGenerator(), plainTextLengths);
 
-    rc4Results = evaluate(new ARC4(key), plainTexts, "rc4", 10);
-    desResults = evaluate(new DES(key), plainTexts, "des", 10);
+    vector<vector<EvaluationResult>> evaluationResults{
+        evaluate(new ARC4(key), plainTexts, "rc4", 10),
+        evaluate(new DES(key), plainTexts, "des", 10)
+    };
 
-    results = rc4Results;
-    results.insert(results.end(), desResults.begin(), desResults.end());
+    vector<EvaluationResult> results = combineEvaluationResults(evaluationResults);
+
 
     dumpResult(results);
 
