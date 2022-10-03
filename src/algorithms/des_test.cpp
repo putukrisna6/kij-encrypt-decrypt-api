@@ -69,7 +69,7 @@ int main()
         vector<string> testCase = testCases[i];
 
         DES *des = new DES(testCase[0], IV);
-        des->setLog(true);
+        // des->setLog(true);
 
         string cipherText = des->encrypt(testCase[1]);
         if (testCase[2] != "") {
