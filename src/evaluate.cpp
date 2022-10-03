@@ -6,10 +6,6 @@
 using namespace std;
 
 const double ONE_SEC_TO_MILLISEC = 1000.0;
-const int PT_LEN_LOW_POW = 5;
-const int PT_LEN_HIGH_POW = 6;
-const int PT_TYPE_RANDOM = 0;
-const int PT_TYPE_PERIODIC = 1;
 
 double calculateElapsedTimeInMs(clock_t startTime, clock_t endTime) {
     return ((double) (endTime - startTime)) / CLOCKS_PER_SEC * ONE_SEC_TO_MILLISEC;
@@ -110,27 +106,7 @@ private:
     }
 };
 
-vector<EvaluationResult> evaluate(Encryption *encryption, int nIter, string cipherName, int plainTextType) {
-    vector<size_t> plainTextLengths;
-
-    for(size_t i = PT_LEN_LOW_POW; i <= PT_LEN_HIGH_POW; i++) {
-        plainTextLengths.push_back(pow(2, i));
-    }
-
-    vector<string> plainTexts;
-    for(size_t i = 0; i < plainTextLengths.size(); i++) {
-        switch(plainTextType) {
-        case PT_TYPE_RANDOM:
-            plainTexts.push_back(generateRandomPlainText(plainTextLengths[i]));
-            break;
-        case PT_TYPE_PERIODIC:
-            plainTexts.push_back(generatePeriodicPlainText(plainTextLengths[i]));
-            break;
-        default:
-            throw invalid_argument("invalid plain text type");
-        }
-    }
-
+vector<EvaluationResult> evaluate(Encryption *encryption, vector<string> plainTexts, string cipherName, int nIter) {
     string cipherText, decryptedCipherText;
     vector<double> encryptRunningTimesInMs, decryptRunningTimesInMs;
     double encryptRunningTimesMeanInMs, encryptRunningTimesPopulationStandardDeviationInMs,
@@ -197,8 +173,14 @@ int main() {
     const string key = "8_chars_";
     vector<EvaluationResult> rc4Results, desResults, results;
 
-    rc4Results = evaluate(new ARC4(key), 10, "rc4", PT_TYPE_PERIODIC);
-    desResults = evaluate(new DES(key), 10, "des", PT_TYPE_PERIODIC);
+    vector<size_t> plainTextLengths;
+    for(int i = 5; i <= 16; i++) {
+        plainTextLengths.push_back(pow(2, i));
+    }
+    vector<string> plainTexts = generatePlainTexts(new PeriodicPlainTextGenerator(), plainTextLengths);
+
+    rc4Results = evaluate(new ARC4(key), plainTexts, "rc4", 10);
+    desResults = evaluate(new DES(key), plainTexts, "des", 10);
 
     results = rc4Results;
     results.insert(results.end(), desResults.begin(), desResults.end());

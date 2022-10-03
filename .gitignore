@@ -45,3 +45,6 @@ src/client
 src/server
 .vscode
 *tempCodeRunnerFile.cpp
+
+# Dumps
+src/dumps/*.txt
