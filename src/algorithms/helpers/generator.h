@@ -4,35 +4,50 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-const int minPrintableAsciiCharacter = 32;
-const int maxPrintableAsciiCharacter = 127;
+class IPlainTextGenerator {
+    public:
+        static const int MIN_ASCII_CODE = 32, MAX_ASCII_CODE = 127;
+        virtual string generate(size_t length) = 0;
+};
 
-// Interval: [startNumber, endNumber]
-int generateRandomNumber(int startNumber, int endNumber) {
-    return startNumber + rand() % (endNumber - startNumber + 1);
-}
+class RandomPlainTextGenerator: public IPlainTextGenerator {
+    public:
+        string generate (size_t length) {
+            string result;
+            for(size_t i = 0; i < length; i++) {
+                result += this->generateRandomAsciiCharacter();
+            }
+            return result;
+        }
+    private:
+        int generateRandomNumber(int startNumber, int endNumber) {
+            return startNumber + rand() % (endNumber - startNumber + 1);
+        }
 
-// Character code interval: [32, 127]
-char generateRandomPrintableAsciiCharacter() {
-    char c = (char) generateRandomNumber(minPrintableAsciiCharacter, maxPrintableAsciiCharacter);
-    return c;
-}
+        char generateRandomAsciiCharacter() {
+            char c = (char) this->generateRandomNumber(IPlainTextGenerator::MIN_ASCII_CODE, IPlainTextGenerator::MAX_ASCII_CODE);
+            return c;
+        }
+};
 
-string generateRandomPlainText(int length) {
-    string result;
-    for(int i = 0; i < length; i++) {
-        result += generateRandomPrintableAsciiCharacter();
+class PeriodicPlainTextGenerator: public IPlainTextGenerator {
+    public:
+        string generate (size_t length) {
+            string result;
+            for(size_t i = 0; i < length; i++) {
+                char c = (char) (IPlainTextGenerator::MIN_ASCII_CODE + i % (IPlainTextGenerator::MAX_ASCII_CODE - IPlainTextGenerator::MIN_ASCII_CODE + 1));
+                result += c;
+            }
+            return result;
+        }
+};
+
+vector<string> generatePlainTexts(IPlainTextGenerator *generator, vector<size_t> lengths) {
+    vector<string> plainTexts;
+    for(size_t i = 0; i < lengths.size(); i++) {
+        plainTexts.push_back(generator->generate(lengths[i]));
     }
-    return result;
-}
-
-string generatePeriodicPlainText(int length) {
-    string result;
-    for(int i = 0; i < length; i++) {
-        char c = (char) (minPrintableAsciiCharacter + i % (maxPrintableAsciiCharacter - minPrintableAsciiCharacter + 1));
-        result += c;
-    }
-    return result;
+    return plainTexts;
 }
 
 #endif
