@@ -15,6 +15,7 @@
 #include "algorithms/coba_coba.h"
 #include "algorithms/rc4.h"
 #include "algorithms/des.h"
+#include "algorithms/aes_v2.h"
 
 // Constants
 #define FILE_ROOT "../downloads/"
@@ -32,6 +33,8 @@
 const string key = "I_AM_A_KEY";
 const string desKey = "8_chars_";
 const string desIV = "_iv_key_";
+const string aesKey = "16_long_private_";
+const string aesIV = "_iv_key_for_aes_";
 
 // Global
 DataLayer dataLayer;
@@ -48,6 +51,9 @@ void __instantiateEncryption(int chosenAlgo) {
             break;
         case ALGO_DES:
             encryption = new DES(desKey, desIV);
+            break;
+        case ALGO_AES:
+            encryption = new AES_V2(aesKey);
             break;
         default:
             throw runtime_error("invalid option");

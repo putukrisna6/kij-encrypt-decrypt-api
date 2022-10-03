@@ -37,13 +37,9 @@ int main() {
     for (int i = 0; i < testCases.size(); i++) {
         vector<string> testCase = testCases[i];
 
-        AES_V2 *aes = new AES_V2(testCase[0]);
-        aes->setLog(true);
-
-        auto cipher_text = aes->Encrypt(testCase[1]);
-
-//        aes->setLog(true);
-        auto decrypted_cipher_message = aes->Decrypt(cipher_text);
+        Encryption *aes = new AES_V2(testCase[0]);
+        auto cipher_text = aes->encrypt(testCase[1]);
+        auto decrypted_cipher_message = aes->encrypt(cipher_text);
 
         // cout << endl << endl;
         // cout << "private_key_size: " << private_key.length() << endl;

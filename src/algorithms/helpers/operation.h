@@ -48,35 +48,6 @@ string shiftRight(string s, unsigned int shifts) {
     return shift(s, shifts * -1);
 }
 
-/**
- * i | n | g | o | b | l
- * n | g | o | b | l | i
- *
- * g | o | b | l | i | n
- *
- * o | b | l | i | n | g
- * b | l | i | n | g | o
- */
-
-//string shiftRight(string s, int shifts) {
-//    size_t length = s.length();
-//
-//    if (shifts % length == 0) {
-//        return s;
-//    }
-//
-//    string res = "";
-//    for (
-//            size_t j = 0, currIndex = shifts % length;
-//            j < length;
-//            j++, currIndex = (currIndex + 1) % length
-//    ){
-//        res += s[currIndex];
-//    }
-//
-//    return res;
-//}
-
 string XOR(string a, string b) {
     string res = "";
     for (int i = 0; i < a.size(); i++) {
