@@ -27,6 +27,11 @@ int main() {
                  "01000001010001010101001100100000011001010110111001100011011100100111100101110000011101000010000001101101011001010111001101110011011000010110011101100101", //"AES encrypt message",
                  ""
              },
+             {
+                 "16_long_private_",
+                  "AES encrypt message",
+                 ""
+             },
     };
 
     for (int i = 0; i < testCases.size(); i++) {
@@ -44,9 +49,9 @@ int main() {
         // cout << "private_key_size: " << private_key.length() << endl;
          cout << "private_key: " << testCase[0] << endl;
          cout << "message_size: " << testCase[1].length() << endl;
-         cout << "message: " << binToHex(testCase[1]) << endl;
+         cout << "message: " << testCase[1] << endl;
          cout << "cipher_size: " << cipher_text.length() << endl;
-         cout << "cipher: " << binToHex(cipher_text) << endl;
+         cout << "cipher: " << cipher_text << endl;
         cout << "decrypted_size: " << decrypted_cipher_message.length() << endl;
         cout << "decrypted: " << decrypted_cipher_message << endl;
 
