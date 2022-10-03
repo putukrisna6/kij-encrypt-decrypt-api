@@ -614,9 +614,23 @@ class AES_V2 {
             expandedKey = KeyExpansion(binKey);
         }
 
+        /**
+        * @brief Encrypt plaintext.
+        *
+        * If plainText is in binary string, then output will be in binary string
+        * If plainText is in ASCII string, then output will be in ASCII string
+        *
+        * @param plainText Can be in binary string or ASCII string
+        * @return string
+        */
         string Encrypt(string plainText) {
             std::string tag = "Encrypt()";
             log(tag, "==== Begin Encrypting ====");
+
+            bool isBinary = isBinaryString(plainText);
+            if (!isBinary) {
+                plainText = stringToBinary(plainText);
+            }
 
             size_t blockCount = 1;
             string cipherText;
@@ -624,12 +638,12 @@ class AES_V2 {
 
             for (const auto& block: blocks) {
                 string oneBlockResult = EncryptBlock(block);
-                log(tag, "--------------------------");
-                log(tag, "");
-                log128BitBinaryStringAs32BitEachRow(tag, oneBlockResult);
-
                 cipherText += oneBlockResult;
                 blockCount++;
+            }
+
+            if (!isBinary) {
+                cipherText = binaryToString(cipherText);
             }
 
             this->log(tag, "==== Encrypt Finished ====");
@@ -639,26 +653,29 @@ class AES_V2 {
         string Decrypt(string cipherText) {
             std::string tag = "Decrypt()";
             log(tag, "==== Begin Decrypting ====");
-            log128BitBinaryStringAs32BitEachRow("Cipher Text", cipherText);
+
+            bool isBinary = isBinaryString(cipherText);
+            if (!isBinary) {
+                cipherText = stringToBinary(cipherText);
+            }
 
             size_t blockCount = 1;
-            string decryptedText;
+            string plainText;
             vector<string> blocks = splitIntoBlocks(cipherText, blockBytesLen);
 
             for (const auto& block: blocks) {
                 string oneBlockResult = DecryptBlock(block);
-
-                log(tag, "--------------------------");
-                log(tag, "");
-                log128BitBinaryStringAs32BitEachRow(tag, oneBlockResult);
-
-                decryptedText += oneBlockResult;
+                plainText += oneBlockResult;
                 blockCount++;
             }
+            plainText = pkcsUnpad(plainText, blockBytesLen);
 
-            log128BitBinaryStringAs32BitEachRow("Decrypt result", decryptedText);
+            if (!isBinary) {
+                plainText = binaryToString(plainText);
+            }
+
             log(tag, "==== Decrypt Finished ====");
-            return pkcsUnpad(decryptedText, blockBytesLen);
+            return plainText;
         }
 
         void setLog(bool log) {
