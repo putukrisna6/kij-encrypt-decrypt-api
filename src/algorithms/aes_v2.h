@@ -283,7 +283,7 @@ class AES_V2 {
             string res = "";
             for (int i = 0; i < 4; i++) {
                 int decimal = binaryToDecimal(a.substr(i*8,8));
-                string sboxBit = byteToBinary(sbox[decimal / 16][decimal % 16]);
+                string sboxBit = byteToBinary(sbox[decimal / blockBytesLen][decimal % blockBytesLen]);
                 res += sboxBit;
             }
             return res;
@@ -380,7 +380,7 @@ class AES_V2 {
                 string temp;
                 for (int j = 0; j < 4; j++) {
                     int decimal = binaryToDecimal(word.substr(j * 8, 8));
-                    temp += byteToBinary(inv_sbox[decimal / 16][decimal % 16]);;
+                    temp += byteToBinary(inv_sbox[decimal / blockBytesLen][decimal % blockBytesLen]);;
                 }
                 result += temp;
             }
@@ -498,19 +498,9 @@ class AES_V2 {
             return result2;
         }
 
-        void CheckLength(unsigned int len) {
-//            this->log("CheckLength", "blockByteLength: " + std::to_string(blockBytesLen));
-            if (len % blockBytesLen != 0) {
-                throw std::length_error(
-                        "Plaintext length must be divisible by " +
-                        std::to_string(blockBytesLen)
-                    );
-            }
-        }
-
-
         /**
          * Encrypt a single block (128-bit) of Binary String
+         * ex. "0000111100010101..."
          *
          * @param text
          * @return
@@ -523,37 +513,37 @@ class AES_V2 {
 
             string key = expandedKey.substr(0, 128);
             result = AddRoundKey(text, key);
-            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+//            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
             for (round = 1; round <= 9; round++) {
-                this->log("EncryptBlock", "Round " + to_string(round) + "\n");
+//                log("EncryptBlock", "Round " + to_string(round) + "\n");
 
                 result = SubBytes(result);
-                log128BitBinaryStringAs32BitEachRow("SubBytes", result);
+//                log128BitBinaryStringAs32BitEachRow("SubBytes", result);
 
                 result = ShiftRows(result);
-                log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+//                log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
 
                 result = MixColumns(result);
-                log128BitBinaryStringAs32BitEachRow("MixColumns", result);
+//                log128BitBinaryStringAs32BitEachRow("MixColumns", result);
 
                 // Get current Round of Key from expandedKey
                 string nextRoundKey = expandedKey.substr(round * 128, 128);
                 result = AddRoundKey(result, nextRoundKey);
-                log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+//                log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
-                log("", "\n\n");
+//                log("", "\n\n");
             }
 
             result = SubBytes(result);
-            log128BitBinaryStringAs32BitEachRow("SubBytes", result);
+//            log128BitBinaryStringAs32BitEachRow("SubBytes", result);
 
             result = ShiftRows(result);
-            log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+//            log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
 
             string nextRoundKey = expandedKey.substr(round * 128, 128);
             result = AddRoundKey(result, nextRoundKey);
-            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+//            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
             return result;
         }
@@ -563,7 +553,7 @@ class AES_V2 {
             string result;
             unsigned int round;
 
-            log(tag, "Expanded key length: " + to_string(expandedKey.length()));
+//            log(tag, "Expanded key length: " + to_string(expandedKey.length()));
             string key = expandedKey.substr(10 * 128, 128);
             result = AddRoundKey(cipherText, key);
 //            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
@@ -601,56 +591,6 @@ class AES_V2 {
 
             return result;
 
-//            unsigned char state[4][4];
-//            unsigned int i, j, round;
-//
-//            for (i = 0; i < 4; i++) {
-//                for (j = 0; j < 4; j++) {
-//                    state[i][j] = in[i + 4 * j];
-//                }
-//            }
-//
-//            AddRoundKey(state, roundKeys + 16 * 4 * 4);
-//
-//            for (round = 16 - 1; round >= 1; round--) {
-//                InvSubBytes(state);
-//                InvShiftRows(state);
-//                AddRoundKey(state, roundKeys + round * 4 * 4);
-//                InvMixColumns(state);
-//            }
-//
-//            InvSubBytes(state);
-//            InvShiftRows(state);
-//            AddRoundKey(state, roundKeys);
-//
-//            for (i = 0; i < 4; i++) {
-//                for (j = 0; j < 4; j++) {
-//                    out[i + 4 * j] = state[i][j];
-//                }
-//            }
-        }
-
-        void XorBlocks(
-            const unsigned char *a,
-            const unsigned char *b,
-            unsigned char *c,
-            unsigned int len
-        ) {
-            for (unsigned int i = 0; i < len; i++) {
-                c[i] = a[i] ^ b[i];
-            }
-        }
-
-        std::vector<unsigned char> ArrayToVector(
-            unsigned char *a,
-            unsigned int len
-        ) {
-            std::vector<unsigned char> v(a, a + len * sizeof(unsigned char));
-            return v;
-        }
-
-        unsigned char *VectorToArray(std::vector<unsigned char> &a) {
-            return a.data();
         }
 
         void log(const std::string& tag, const std::string& message) {
@@ -677,31 +617,23 @@ class AES_V2 {
         string Encrypt(string plainText) {
             std::string tag = "Encrypt()";
             log(tag, "==== Begin Encrypting ====");
-//            log(tag, "inLen: " + std::to_string(inLen));
-//            for (int k = 0; k < plainText.length() / 32; k++) {
-//                cout << "Plain Text - " << binToHex(plainText.substr(k * 32, 32)) << endl;
-//            }
-//
-            CheckLength(plainText.length());
-//            unsigned char *newIn = new unsigned char[newLen];
-//            for (int i = 0; i < newLen; ++i) {
-//                if (i < inLen) {
-//                    newIn[i] = in[i];
-//                } else {
-//                    newIn[i] = padding;
-//                }
-//            }
-//
-//            unsigned char *out = new unsigned char[newLen];
-//            unsigned char *roundKeys = new unsigned char[4 * 4 * (16 + 1)];
 
-//            for (unsigned int i = 0; i < newLen; i += blockBytesLen) {
-                string result = EncryptBlock(plainText);
-                log128BitBinaryStringAs32BitEachRow(tag, result);
-//            }
+            size_t blockCount = 1;
+            string cipherText;
+            vector<string> blocks = splitIntoBlocks(plainText, blockBytesLen);
+
+            for (const auto& block: blocks) {
+                string oneBlockResult = EncryptBlock(block);
+                log(tag, "--------------------------");
+                log(tag, "");
+                log128BitBinaryStringAs32BitEachRow(tag, oneBlockResult);
+
+                cipherText += oneBlockResult;
+                blockCount++;
+            }
 
             this->log(tag, "==== Encrypt Finished ====");
-            return result;
+            return cipherText;
         }
 
         string Decrypt(string cipherText) {
@@ -709,88 +641,24 @@ class AES_V2 {
             log(tag, "==== Begin Decrypting ====");
             log128BitBinaryStringAs32BitEachRow("Cipher Text", cipherText);
 
-//            CheckLength(inLen);
-//            unsigned char *out = new unsigned char[inLen];
-//            unsigned char *roundKeys = new unsigned char[4 * 4 * (16 + 1)];
-            // KeyExpansion(key, roundKeys);
-//            for (unsigned int i = 0; i < inLen; i += blockBytesLen) {
-                string result = DecryptBlock(cipherText);
-                log128BitBinaryStringAs32BitEachRow("Decrypt result", result);
-//            }
+            size_t blockCount = 1;
+            string decryptedText;
+            vector<string> blocks = splitIntoBlocks(cipherText, blockBytesLen);
 
+            for (const auto& block: blocks) {
+                string oneBlockResult = DecryptBlock(block);
+
+                log(tag, "--------------------------");
+                log(tag, "");
+                log128BitBinaryStringAs32BitEachRow(tag, oneBlockResult);
+
+                decryptedText += oneBlockResult;
+                blockCount++;
+            }
+
+            log128BitBinaryStringAs32BitEachRow("Decrypt result", decryptedText);
             log(tag, "==== Decrypt Finished ====");
-            return result;
-        }
-
-//        unsigned char *EncryptCBC(const unsigned char in[], unsigned int inLen,
-//                                  const unsigned char key[], const unsigned char *iv);
-//
-//        unsigned char *DecryptCBC(const unsigned char in[], unsigned int inLen,
-//                                  const unsigned char key[], const unsigned char *iv);
-//
-//        unsigned char *EncryptCFB(const unsigned char in[], unsigned int inLen,
-//                                  const unsigned char key[], const unsigned char *iv);
-//
-//        unsigned char *DecryptCFB(const unsigned char in[], unsigned int inLen,
-//                                  const unsigned char key[], const unsigned char *iv);
-
-//        std::vector<unsigned char> Encrypt(
-//            std::vector<unsigned char> in,
-//            std::vector<unsigned char> key
-//        ) {
-//            unsigned char *out = Encrypt(
-//                VectorToArray(in),
-//                (unsigned int)in.size(),
-//                VectorToArray(key)
-//            );
-//            std::vector<unsigned char> v = ArrayToVector(out, in.size());
-//            delete[] out;
-//            return v;
-//        }
-
-//        std::vector<unsigned char> DecryptECB(
-//            std::vector<unsigned char> in,
-//            std::vector<unsigned char> key
-//        ) {
-//            unsigned char *out = Decrypt(
-//                VectorToArray(in),
-//                (unsigned int)in.size(),
-//                VectorToArray(key)
-//            );
-//            std::vector<unsigned char> v = ArrayToVector(out, (unsigned int)in.size());
-//            delete[] out;
-//            return v;
-//        }
-
-//        std::vector<unsigned char> EncryptCBC(std::vector<unsigned char> in,
-//                                              std::vector<unsigned char> key,
-//                                              std::vector<unsigned char> iv);
-//
-//        std::vector<unsigned char> DecryptCBC(std::vector<unsigned char> in,
-//                                              std::vector<unsigned char> key,
-//                                              std::vector<unsigned char> iv);
-//
-//        std::vector<unsigned char> EncryptCFB(std::vector<unsigned char> in,
-//                                              std::vector<unsigned char> key,
-//                                              std::vector<unsigned char> iv);
-//
-//        std::vector<unsigned char> DecryptCFB(std::vector<unsigned char> in,
-//                                              std::vector<unsigned char> key,
-//                                              std::vector<unsigned char> iv);
-
-        void printHexArray(
-            unsigned char a[],
-            unsigned int n
-        ) {
-            for (unsigned int i = 0; i < n; i++) {
-                printf("%02x ", a[i]);
-            }
-        }
-
-        void printHexVector(std::vector<unsigned char> a) {
-            for (unsigned char i : a) {
-                printf("%02x ", i);
-            }
+            return pkcsUnpad(decryptedText, blockBytesLen);
         }
 
         void setLog(bool log) {
