@@ -8,15 +8,26 @@
 
 typedef unsigned short int usi;
 
+/**
+ * @brief Run DES encryption using Cipher Block Chaining (CBC) mode.
+ */
 class DES : public Encryption {
     public:
-        DES(string key) {
+        DES(string key, string IV) {
             bin64Key = (isBinaryString(key)) ? key : stringToBinary(key);
             if (bin64Key.length() != 64) {
                 throw invalid_argument(
                     "DES key length must equal to 64-bit (8 character)"
                 );
             }
+
+            bin64IV = (isBinaryString(IV)) ? IV : stringToBinary(IV);
+            if (bin64IV.length() != 64) {
+                throw invalid_argument(
+                    "DES initial vector key length must equal to 64-bit (8 character)"
+                );
+            }
+
             generateRoundKeys();
         }
 
@@ -37,7 +48,7 @@ class DES : public Encryption {
                 plainText = stringToBinary(plainText);
             }
 
-            string cipherText = __encrypt(plainText, encryptionRoundKeys);
+            string cipherText = __encrypt(plainText, true);
 
             if (!inBinary) {
                 cipherText = binaryToString(cipherText);
@@ -64,7 +75,7 @@ class DES : public Encryption {
                 cipherText = stringToBinary(cipherText);
             }
 
-            string plainText = __encrypt(cipherText, decryptionRoundKeys);
+            string plainText = __encrypt(cipherText, false);
             plainText = pkcsUnpad(plainText, 8);
 
             if (!inBinary) {
@@ -84,6 +95,7 @@ class DES : public Encryption {
          * Variables
          *********************************************************************/
         string bin64Key;
+        string bin64IV;
         vector<string> encryptionRoundKeys; // in binary
         vector<string> decryptionRoundKeys; // in binary
 
@@ -219,25 +231,44 @@ class DES : public Encryption {
         /**
          * @brief Encrypt a plain binary string into a ciphered binary string.
          * 
+         * Use Cipher Block Chaining (CBC) mode.
+         * 
          * @param plainText Can be in binary string
-         * @param roundKeys 
+         * @param doEncryption If false, the function will do decryption. 
          * @return string in binary string
          */
-        string __encrypt(string plainText, vector<string> roundKeys) {
+        string __encrypt(string plainText, bool doEncryption) {
 
-            string combined = "";
-            vector<string> blocks = splitIntoBlocks(plainText, 8);
             size_t blockCounter = 1;
+            string combined = "";
+            string previousCipher = bin64IV;
+            vector<string> blocks = splitIntoBlocks(plainText, 8);
+            vector<string> keys = (doEncryption) 
+                ? encryptionRoundKeys 
+                : decryptionRoundKeys;
 
             for (string block : blocks) {
                 log("Block " + to_string(blockCounter));
 
-                string cipherText = __encryptOneBlock(block, roundKeys);
+                if (doEncryption) {
+                    block = XOR(block, previousCipher);
+                }
+
+                string cipherText = __encryptOneBlock(block, keys);
+                
+                if (doEncryption) {
+                    previousCipher = cipherText;
+                } 
+                else {
+                    cipherText = XOR(cipherText, previousCipher);
+                    previousCipher = block;
+                }
+
                 log("--------------------------------------------");
                 log("Output at block " + to_string(blockCounter) + ": " + 
                     binToHex(cipherText) + "\n"
                 );
-                
+
                 combined += cipherText;
                 blockCounter++;
             }
