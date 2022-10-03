@@ -31,6 +31,7 @@
 
 const string key = "I_AM_A_KEY";
 const string desKey = "8_chars_";
+const string desIV = "_iv_key_";
 
 // Global
 DataLayer dataLayer;
@@ -46,7 +47,7 @@ void __instantiateEncryption(int chosenAlgo) {
             encryption = new ARC4(key);
             break;
         case ALGO_DES:
-            encryption = new DES(desKey);
+            encryption = new DES(desKey, desIV);
             break;
         default:
             throw runtime_error("invalid option");
