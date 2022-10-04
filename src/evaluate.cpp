@@ -113,6 +113,8 @@ vector<EvaluationResult> evaluate(Encryption *encryption, vector<string> plainTe
     vector<EvaluationResult> evaluationResults;
 
     for(size_t i = 0; i < plainTexts.size(); i++) {
+        printf("Evaluating %s on plain text with length %lu\n", cipherName.c_str(), plainTexts[i].size());
+
         // Run encrypt once to get the cipherText
         string cipherText = encryption->encrypt(plainTexts[i]);
 
@@ -185,8 +187,8 @@ int main() {
     const string key = "8_chars_";
 
     vector<size_t> plainTextLengths;
-    for(int i = 5; i <= 16; i++) {
-        plainTextLengths.push_back(pow(2, i));
+    for(int i = 95; i <= 192; i++) {
+        plainTextLengths.push_back(i);
     }
     vector<string> plainTexts = generatePlainTexts(new PeriodicPlainTextGenerator(), plainTextLengths);
 
