@@ -185,9 +185,16 @@ int main() {
     srand(time(0));
 
     const string key = "8_chars_";
-
     vector<size_t> plainTextLengths;
-    for(int i = 95; i <= 192; i++) {
+    size_t minPtLen, maxPtLen; // 96 192
+
+    cout << "Enter minimum plain text length: ";
+    cin >> minPtLen;
+
+    cout << "Enter maximum plain text length: ";
+    cin >> maxPtLen;
+
+    for(int i = minPtLen; i <= maxPtLen; i++) {
         plainTextLengths.push_back(i);
     }
     vector<string> plainTexts = generatePlainTexts(new PeriodicPlainTextGenerator(), plainTextLengths);
