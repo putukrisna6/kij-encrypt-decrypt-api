@@ -9,7 +9,7 @@
 #include "../algorithms/helpers/convertion.h"
 
 #define PORT 8080
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 20480
 
 using namespace std;
 

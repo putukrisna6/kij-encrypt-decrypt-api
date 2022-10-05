@@ -27,7 +27,7 @@
 #define SEND_FILE 1
 #define SEND_TEXT 2
 
-#define BUFFER_SIZE 1024
+#define BUFFER_SIZE 20480
 
 const string key = "I_AM_A_KEY";
 const string desKey = "8_chars_";
