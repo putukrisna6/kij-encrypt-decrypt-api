@@ -47,4 +47,4 @@ src/server
 *tempCodeRunnerFile.cpp
 
 # Dumps
-src/dumps/*.txt
+src/dumps/*.json
