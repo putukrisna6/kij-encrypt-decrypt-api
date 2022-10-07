@@ -3,7 +3,7 @@
 //
 
 #include <cassert>
-#include "aes_v2.h"
+#include "aes.h"
 
 using namespace std;
 
@@ -37,7 +37,7 @@ int main() {
     for (int i = 0; i < testCases.size(); i++) {
         vector<string> testCase = testCases[i];
 
-        Encryption *aes = new AES_V2(testCase[0]);
+        Encryption *aes = new AES(testCase[0]);
         auto cipher_text = aes->encrypt(testCase[1]);
         auto decrypted_cipher_message = aes->encrypt(cipher_text);
 

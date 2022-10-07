@@ -15,7 +15,7 @@
 #include "algorithms/coba_coba.h"
 #include "algorithms/rc4.h"
 #include "algorithms/des.h"
-#include "algorithms/aes_v2.h"
+#include "algorithms/aes.h"
 
 // Constants
 #define FILE_ROOT "../downloads/"
