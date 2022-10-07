@@ -14,7 +14,6 @@ using namespace std;
 class AES_V2 : public Encryption {
 public:
     explicit AES_V2(string key) {
-        setLog(true);
         binKey = (isBinaryString(key)) ? key : stringToBinary(key);
         if (binKey.length() != BLOCK_BIT_SIZE) {
             throw invalid_argument("Invalid key length");
@@ -184,7 +183,7 @@ private:
         for (int i = 0; i < WORD_BYTE_SIZE; i++) {
             string temp = binKey.substr(i * WORD_BIT_SIZE, WORD_BIT_SIZE);
             res += temp;
-//                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
+            log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
         }
 
         // Get remaining words
@@ -198,7 +197,7 @@ private:
                 temp = XOR(x, rCon);
             }
             temp = XOR(res.substr((i - 4) * WORD_BIT_SIZE, WORD_BIT_SIZE), temp);
-//                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
+            log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
             res += temp;
         }
 
@@ -363,37 +362,37 @@ private:
 
         string key = expandedKey.substr(0, BLOCK_BIT_SIZE);
         result = AddRoundKey(text, key);
-//            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+        log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
         for (round = 1; round <= 9; round++) {
-//                log("EncryptBlock", "Round " + to_string(round) + "\n");
+            log("EncryptBlock", "Round " + to_string(round) + "\n");
 
             result = SubBytes(result);
-//                log128BitBinaryStringAs32BitEachRow("SubBytes", result);
+            log128BitBinaryStringAs32BitEachRow("SubBytes", result);
 
             result = ShiftRows(result);
-//                log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+            log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
 
             result = MixColumns(result);
-//                log128BitBinaryStringAs32BitEachRow("MixColumns", result);
+            log128BitBinaryStringAs32BitEachRow("MixColumns", result);
 
             // Get current Round of Key from expandedKey
             string nextRoundKey = expandedKey.substr(round * BLOCK_BIT_SIZE, BLOCK_BIT_SIZE);
             result = AddRoundKey(result, nextRoundKey);
-//                log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
-//                log("", "\n\n");
+            log("", "\n\n");
         }
 
         result = SubBytes(result);
-//            log128BitBinaryStringAs32BitEachRow("SubBytes", result);
+        log128BitBinaryStringAs32BitEachRow("SubBytes", result);
 
         result = ShiftRows(result);
-//            log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+        log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
 
         string nextRoundKey = expandedKey.substr(round * BLOCK_BIT_SIZE, BLOCK_BIT_SIZE);
         result = AddRoundKey(result, nextRoundKey);
-//            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+        log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
         return result;
     }
@@ -403,41 +402,40 @@ private:
         string result;
         unsigned int round;
 
-//            log(tag, "Expanded key length: " + to_string(expandedKey.length()));
+        log(tag, "Expanded key length: " + to_string(expandedKey.length()));
         string key = expandedKey.substr(10 * BLOCK_BIT_SIZE, BLOCK_BIT_SIZE);
         result = AddRoundKey(cipherText, key);
-//            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+        log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
         for (round = 1; round <= 9; round++) {
-//                log("EncryptBlock", "Round " + to_string(round) + "\n");
+            log("EncryptBlock", "Round " + to_string(round) + "\n");
 
             result = InvShiftRows(result);
-//                log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+            log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
 
             result = InvSubBytes(result);
-//                log128BitBinaryStringAs32BitEachRow("SubBytes", result);
+            log128BitBinaryStringAs32BitEachRow("SubBytes", result);
 
             // Get current Round of Key from expandedKey
             string nextRoundKey = expandedKey.substr((10 - round) * BLOCK_BIT_SIZE, BLOCK_BIT_SIZE);
             result = AddRoundKey(result, nextRoundKey);
-//                log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
 
             result = InvMixColumns(result);
-//                log128BitBinaryStringAs32BitEachRow("MixColumns", result);
-
-//                log("", "\n\n");
+            log128BitBinaryStringAs32BitEachRow("MixColumns", result);
+            log("", "\n\n");
         }
 
         result = InvShiftRows(result);
-//            log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
+        log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
 
         result = InvSubBytes(result);
-//            log128BitBinaryStringAs32BitEachRow("SubBytes", result);
+        log128BitBinaryStringAs32BitEachRow("SubBytes", result);
 
         string nextRoundKey = expandedKey.substr(0, BLOCK_BIT_SIZE);
         result = AddRoundKey(result, nextRoundKey);
-//            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
+        log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
         return result;
 
