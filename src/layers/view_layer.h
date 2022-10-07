@@ -12,15 +12,22 @@ class ViewLayer
             cout << "-----------------------------\n";
         }
 
-        void resultsDisplay(string cipherText, string decrypted) {
+        void timeTakenDisplay(int time) {
+            cout << "Encryption succeeded\n";
+            cout << "\tTook " << time << " microsecond(s)\n";
+        }
+
+        void resultsDisplay(string cipherText, string decrypted, int time) {
             cout << "\nMessage received\n";
             cout << "\tEncrypted: " << cipherText << endl;
             cout << "\tDecrypted: " << decrypted << endl;
+            cout << "\tDecryption took " << time << " microsecond(s)\n";
         }
 
-        void resultsDisplay(string fileName) {
+        void resultsDisplay(string fileName, int time) {
             cout << "\nFile received\n";
             cout << "\t" << fileName << " saved\n";
+            cout << "\tDecryption took " << time << " microsecond(s)\n";
         }
 
         int optionsDisplay() {
