@@ -16,7 +16,7 @@ public:
     explicit AES_V2(string key) {
         setLog(true);
         binKey = (isBinaryString(key)) ? key : stringToBinary(key);
-        if (binKey.length() != 128) {
+        if (binKey.length() != BLOCK_BIT_SIZE) {
             throw invalid_argument("Invalid key length");
         }
         expandedKey = KeyExpansion(binKey);
@@ -95,6 +95,10 @@ private:
     string expandedKey;
     bool isLogActive = false;
     static constexpr unsigned int blockBytesLen = 4 * 4 * sizeof(unsigned char);
+    unsigned int ROUND_COUNT = 9;
+    unsigned int WORD_BYTE_SIZE = 4;
+    unsigned int WORD_BIT_SIZE = 32;
+    unsigned int BLOCK_BIT_SIZE = 128;
 
     /**
     * @brief Do S-box permutation.
@@ -106,9 +110,9 @@ private:
     string AddRoundKey(string text, string key) {
         unsigned int i;
         string result;
-        for (i = 0; i < 4; i++) {
-            string a = text.substr(i * 32, 32);
-            string b = key.substr(i * 32, 32);
+        for (i = 0; i < WORD_BYTE_SIZE; i++) {
+            string a = text.substr(i * WORD_BYTE_SIZE, WORD_BYTE_SIZE);
+            string b = key.substr(i * WORD_BYTE_SIZE, WORD_BYTE_SIZE);
             string temp = XOR(a, b);
 
             result += temp;
@@ -124,7 +128,7 @@ private:
      */
     string SubWord(string a) {
         string res = "";
-        for (int i = 0; i < 4; i++) {
+        for (int i = 0; i < WORD_BYTE_SIZE; i++) {
             int decimal = binaryToDecimal(a.substr(i * 8, 8));
             string sboxBit = byteToBinary(sbox[decimal / blockBytesLen][decimal % blockBytesLen]);
             res += sboxBit;
@@ -153,7 +157,7 @@ private:
         }
 
         string res = byteToBinary(c);
-        for (int i = res.length(); i < 32; i++) {
+        for (int i = res.length(); i < WORD_BIT_SIZE; i++) {
             res += "0";
         }
         return res;
@@ -177,15 +181,15 @@ private:
         string res;
 
         // Get first 4-words
-        for (int i = 0; i < 4; i++) {
-            string temp = binKey.substr(i * 32, 32);
+        for (int i = 0; i < WORD_BYTE_SIZE; i++) {
+            string temp = binKey.substr(i * WORD_BIT_SIZE, WORD_BIT_SIZE);
             res += temp;
 //                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
         }
 
         // Get remaining words
         for (int i = 4; i < 44; i++) {
-            string temp = res.substr((i - 1) * 32, 32);
+            string temp = res.substr((i - 1) * WORD_BIT_SIZE, WORD_BIT_SIZE);
 
             if (i % 4 == 0) {
                 string x = RotWord(temp);
@@ -193,7 +197,7 @@ private:
                 string rCon = Rcon(i / 4);
                 temp = XOR(x, rCon);
             }
-            temp = XOR(res.substr((i - 4) * 32, 32), temp);
+            temp = XOR(res.substr((i - 4) * WORD_BIT_SIZE, WORD_BIT_SIZE), temp);
 //                log("KeyExpansion", "w" + to_string(i) + " = " + binToHex(temp));
             res += temp;
         }
@@ -206,8 +210,8 @@ private:
         unsigned int i;
         string result;
 
-        for (i = 0; i < 4; i++) {
-            string word = plainText.substr(i * 32, 32);
+        for (i = 0; i < WORD_BYTE_SIZE; i++) {
+            string word = plainText.substr(i * WORD_BIT_SIZE, WORD_BIT_SIZE);
             result += SubWord(word);
         }
 
@@ -217,10 +221,10 @@ private:
     string InvSubBytes(string cipherText) {
         string result;
 
-        for (int i = 0; i < 4; i++) {
-            string word = cipherText.substr(i * 32, 32);
+        for (int i = 0; i < WORD_BYTE_SIZE; i++) {
+            string word = cipherText.substr(i * WORD_BIT_SIZE, WORD_BIT_SIZE);
             string temp;
-            for (int j = 0; j < 4; j++) {
+            for (int j = 0; j < WORD_BYTE_SIZE; j++) {
                 int decimal = binaryToDecimal(word.substr(j * 8, 8));
                 temp += byteToBinary(inv_sbox[decimal / blockBytesLen][decimal % blockBytesLen]);;
             }
@@ -237,16 +241,16 @@ private:
 
         int l = 0;
         for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                bitset<8> byte = stringBinaryToBitset(text.substr((j * 32) + i * 8, 8));
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) {
+                bitset<8> byte = stringBinaryToBitset(text.substr((j * WORD_BIT_SIZE) + i * 8, 8));
                 mtx[l] = byte;
                 l++;
             }
         }
 
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) { // Take one row from 4x4 matrix
-                arr[j] = mtx[i + j * 4];
+        for (int i = 0; i < WORD_BYTE_SIZE; ++i) {
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) { // Take one row from 4x4 matrix
+                arr[j] = mtx[i + j * WORD_BYTE_SIZE];
             }
 
             mtx[i] = GaloisFieldMul(0x02, arr[0]) ^ GaloisFieldMul(0x03, arr[1]) ^ arr[2] ^ arr[3];
@@ -255,9 +259,9 @@ private:
             mtx[i + 12] = GaloisFieldMul(0x03, arr[0]) ^ arr[1] ^ arr[2] ^ GaloisFieldMul(0x02, arr[3]);
         }
 
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                result += mtx[i + (j * 4)].to_string();
+        for (int i = 0; i < WORD_BYTE_SIZE; ++i) {
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) {
+                result += mtx[i + (j * WORD_BYTE_SIZE)].to_string();
             }
         }
 
@@ -270,17 +274,17 @@ private:
         bitset<8> arr[4];
 
         int l = 0;
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                bitset<8> byte = stringBinaryToBitset(cipherText.substr((j * 32) + i * 8, 8));
+        for (int i = 0; i < WORD_BYTE_SIZE; ++i) {
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) {
+                bitset<8> byte = stringBinaryToBitset(cipherText.substr((j * WORD_BIT_SIZE) + i * 8, 8));
                 mtx[l] = byte;
                 l++;
             }
         }
 
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                arr[j] = mtx[i + j * 4];
+        for (int i = 0; i < WORD_BYTE_SIZE; ++i) {
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) {
+                arr[j] = mtx[i + j * WORD_BYTE_SIZE];
             }
 
             mtx[i] = GaloisFieldMul(0x0e, arr[0]) ^ GaloisFieldMul(0x0b, arr[1]) ^ GaloisFieldMul(0x0d, arr[2]) ^
@@ -293,9 +297,9 @@ private:
                           GaloisFieldMul(0x0e, arr[3]);
         }
 
-        for (int i = 0; i < 4; ++i) {
-            for (int j = 0; j < 4; ++j) {
-                result += mtx[i + (j * 4)].to_string();
+        for (int i = 0; i < WORD_BYTE_SIZE; ++i) {
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) {
+                result += mtx[i + (j * WORD_BYTE_SIZE)].to_string();
             }
         }
 
@@ -305,18 +309,18 @@ private:
     string ShiftRows(string text) {
         string result, result2;
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < WORD_BYTE_SIZE; ++i) {
             string word;
-            for (int j = 0; j < 4; ++j) {
-                word += text.substr((j * 32) + i * 8, 8);
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) {
+                word += text.substr((j * WORD_BIT_SIZE) + i * 8, 8);
             }
             result += shiftLeft(word, i * 8);
         }
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < WORD_BYTE_SIZE; ++i) {
             string word;
-            for (int j = 0; j < 4; ++j) {
-                word += result.substr((j * 32) + i * 8, 8);
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) {
+                word += result.substr((j * WORD_BIT_SIZE) + i * 8, 8);
             }
             result2 += word;
         }
@@ -326,18 +330,18 @@ private:
     string InvShiftRows(string cipherText) {
         string result, result2;
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < WORD_BYTE_SIZE; ++i) {
             string word;
-            for (int j = 0; j < 4; ++j) {
-                word += cipherText.substr((j * 32) + i * 8, 8);
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) {
+                word += cipherText.substr((j * WORD_BIT_SIZE) + i * 8, 8);
             }
             result += shiftRight(word, i * 8);
         }
 
-        for (int i = 0; i < 4; ++i) {
+        for (int i = 0; i < WORD_BYTE_SIZE; ++i) {
             string word;
-            for (int j = 0; j < 4; ++j) {
-                word += result.substr((j * 32) + i * 8, 8);
+            for (int j = 0; j < WORD_BYTE_SIZE; ++j) {
+                word += result.substr((j * WORD_BIT_SIZE) + i * 8, 8);
             }
             result2 += word;
         }
@@ -357,7 +361,7 @@ private:
         unsigned int round;
 
 
-        string key = expandedKey.substr(0, 128);
+        string key = expandedKey.substr(0, BLOCK_BIT_SIZE);
         result = AddRoundKey(text, key);
 //            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
@@ -374,7 +378,7 @@ private:
 //                log128BitBinaryStringAs32BitEachRow("MixColumns", result);
 
             // Get current Round of Key from expandedKey
-            string nextRoundKey = expandedKey.substr(round * 128, 128);
+            string nextRoundKey = expandedKey.substr(round * BLOCK_BIT_SIZE, BLOCK_BIT_SIZE);
             result = AddRoundKey(result, nextRoundKey);
 //                log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
@@ -387,7 +391,7 @@ private:
         result = ShiftRows(result);
 //            log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
 
-        string nextRoundKey = expandedKey.substr(round * 128, 128);
+        string nextRoundKey = expandedKey.substr(round * BLOCK_BIT_SIZE, BLOCK_BIT_SIZE);
         result = AddRoundKey(result, nextRoundKey);
 //            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
@@ -400,7 +404,7 @@ private:
         unsigned int round;
 
 //            log(tag, "Expanded key length: " + to_string(expandedKey.length()));
-        string key = expandedKey.substr(10 * 128, 128);
+        string key = expandedKey.substr(10 * BLOCK_BIT_SIZE, BLOCK_BIT_SIZE);
         result = AddRoundKey(cipherText, key);
 //            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
@@ -414,7 +418,7 @@ private:
 //                log128BitBinaryStringAs32BitEachRow("SubBytes", result);
 
             // Get current Round of Key from expandedKey
-            string nextRoundKey = expandedKey.substr((10 - round) * 128, 128);
+            string nextRoundKey = expandedKey.substr((10 - round) * BLOCK_BIT_SIZE, BLOCK_BIT_SIZE);
             result = AddRoundKey(result, nextRoundKey);
 //                log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
@@ -431,7 +435,7 @@ private:
         result = InvSubBytes(result);
 //            log128BitBinaryStringAs32BitEachRow("SubBytes", result);
 
-        string nextRoundKey = expandedKey.substr(0, 128);
+        string nextRoundKey = expandedKey.substr(0, BLOCK_BIT_SIZE);
         result = AddRoundKey(result, nextRoundKey);
 //            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
