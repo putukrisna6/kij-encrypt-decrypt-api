@@ -48,3 +48,6 @@ src/server
 
 # Dumps
 src/dumps/*.json
+
+# Jupyter Notebook
+.ipynb_checkpoints
