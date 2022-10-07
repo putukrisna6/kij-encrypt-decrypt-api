@@ -31,7 +31,7 @@ public:
     * @return string
     */
     string encrypt(string plainText) {
-        std::string tag = "Encrypt()";
+        string tag = "Encrypt()";
         log(tag, "==== Begin Encrypting ====");
 
         bool isBinary = isBinaryString(plainText);
@@ -58,7 +58,7 @@ public:
     }
 
     string decrypt(string cipherText) {
-        std::string tag = "Decrypt()";
+        string tag = "Decrypt()";
         log(tag, "==== Begin Decrypting ====");
 
         bool isBinary = isBinaryString(cipherText);
@@ -441,7 +441,7 @@ private:
 
     }
 
-    void log(const std::string &tag, const std::string &message) {
+    void log(const string &tag, const string &message) {
         if (isLogActive) {
             printf("%s | %s\n", tag.c_str(), message.c_str());
         }
