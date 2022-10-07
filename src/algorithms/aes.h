@@ -81,11 +81,20 @@ public:
 
         size_t blockCount = 1;
         string plainText;
+        string currentCipher;
+        string prevCipher;
         vector<string> blocks = splitIntoBlocks(cipherText, blockBytesLen);
 
         for (const auto &block: blocks) {
-            string oneBlockResult = DecryptBlock(block);
-            plainText += oneBlockResult;
+            currentCipher = DecryptBlock(block);
+
+            if (blockCount == 1) {
+                plainText += XOR(currentCipher, initializationVector);
+            } else {
+                plainText += XOR(currentCipher, prevCipher);
+            }
+
+            prevCipher = block;
             blockCount++;
         }
         plainText = pkcsUnpad(plainText, blockBytesLen);
