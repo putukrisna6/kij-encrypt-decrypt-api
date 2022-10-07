@@ -3,6 +3,7 @@
 #include <string>
 #include <sstream>
 #include <sys/stat.h>
+#include <chrono>
 
 // Local library headers
 #include "layers/view_layer.h"
@@ -86,7 +87,12 @@ void sendDataFlow() {
     int chosenAlgo = viewLayer.algoOptionsDisplay();
     __instantiateEncryption(chosenAlgo);
 
+    auto start = chrono::high_resolution_clock::now();
     string cipherText = encryption->encrypt(plainText);
+    auto stop = chrono::high_resolution_clock::now();
+
+    auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
+    viewLayer.timeTakenDisplay(duration.count());
 
     Client client;
 
@@ -168,15 +174,19 @@ void receiveDataFlow() {
         server.serverTransmit("Received what to decrypt");
     }
 
+    auto start = chrono::high_resolution_clock::now();
     string decrypted = encryption->decrypt(cipherText);
+    auto stop = chrono::high_resolution_clock::now();
+
+    auto duration = chrono::duration_cast<chrono::microseconds>(stop - start);
 
     if (chosenType == SEND_FILE) {
         string filePath = FILE_ROOT;
         filePath.append(fileName);
         dataLayer.writeFile(filePath, decrypted);
-        viewLayer.resultsDisplay(fileName);
+        viewLayer.resultsDisplay(fileName, duration.count());
     } else {
-        viewLayer.resultsDisplay(cipherText, decrypted);
+        viewLayer.resultsDisplay(cipherText, decrypted, duration.count());
     }
 
     server.end();
