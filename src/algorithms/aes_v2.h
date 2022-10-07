@@ -54,7 +54,7 @@ public:
             cipherText = binaryToString(cipherText);
         }
 
-        this->log(tag, "==== Encrypt Finished ====");
+        log(tag, "==== Encrypt Finished ====");
         return cipherText;
     }
 
@@ -87,7 +87,7 @@ public:
     }
 
     void setLog(bool log) {
-        this->isLogActive = log;
+        isLogActive = log;
     }
 
 private:
@@ -139,11 +139,10 @@ private:
      * @return string
      */
     string RotWord(string a) {
-        string res =
-                a.substr(1 * 8, 8) +
-                a.substr(2 * 8, 8) +
-                a.substr(3 * 8, 8) +
-                a.substr(0 * 8, 8);
+        string res = a.substr(1 * 8, 8) +
+            a.substr(2 * 8, 8) +
+            a.substr(3 * 8, 8) +
+            a.substr(0 * 8, 8);
         return res;
     }
 
@@ -406,7 +405,7 @@ private:
 //            log128BitBinaryStringAs32BitEachRow("AddRoundKey", result);
 
         for (round = 1; round <= 9; round++) {
-//                this->log("EncryptBlock", "Round " + to_string(round) + "\n");
+//                log("EncryptBlock", "Round " + to_string(round) + "\n");
 
             result = InvShiftRows(result);
 //                log128BitBinaryStringAs32BitEachRow("ShiftRows", result);
@@ -441,14 +440,14 @@ private:
     }
 
     void log(const std::string &tag, const std::string &message) {
-        if (this->isLogActive) {
+        if (isLogActive) {
             printf("%s | %s\n", tag.c_str(), message.c_str());
         }
     }
 
     void log128BitBinaryStringAs32BitEachRow(string tag, string message) {
         for (int k = 0; k < message.length() / 32; k++) {
-            this->log(tag, binToHex(message.substr(k * 32, 32)));
+            log(tag, binToHex(message.substr(k * 32, 32)));
         }
     }
 
