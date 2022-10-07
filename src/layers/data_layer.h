@@ -19,40 +19,29 @@ class DataLayer
 
     public:
         string readFile(string filePath) {
-            try {
-                ifstream rf(filePath.c_str(), ios::out);
+            ifstream rf(filePath.c_str(), ios::out);
 
-                if (!rf) {
-                    throw runtime_error("file not found");
-                }
-
-                stringstream buffer;
-                buffer << rf.rdbuf();
-
-                string data = buffer.str();
-
-                rf.close();
-                return data;
-            } catch (const exception& e) {
-                cout << e.what() << endl;
-                cout << typeid(e).name() << endl;
-                return "";
+            if (!rf) {
+                throw runtime_error("file not found");
             }
+
+            stringstream buffer;
+            buffer << rf.rdbuf();
+
+            string data = buffer.str();
+
+            rf.close();
+            return data;
         }
 
         void writeFile(string filePath, string data) {
-            try {
-                ofstream wf(filePath.c_str());
+            ofstream wf(filePath.c_str());
 
-                if (!wf) {
-                    throw runtime_error("something happened");
-                }
-
-                wf << data;
-                wf.close();
-            } catch (const exception& e) {
-                cout << e.what() << endl;
-                cout << typeid(e).name() << endl;
+            if (!wf) {
+                throw runtime_error("unexpected error while writing to file");
             }
+
+            wf << data;
+            wf.close();
         }
 };
