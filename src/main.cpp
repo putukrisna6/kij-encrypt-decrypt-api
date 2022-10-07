@@ -142,6 +142,9 @@ void sendDataFlow() {
 void receiveDataFlow() {
     Server server;
     string fileName;
+    
+    // Create downloads directory if not exist
+    mkdir("../downloads", 0777);
 
     // Get what to receive
     server.serverListen();
