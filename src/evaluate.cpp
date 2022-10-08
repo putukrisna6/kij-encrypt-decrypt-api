@@ -1,9 +1,14 @@
-#include<bits/stdc++.h>
+#include <bits/stdc++.h>
+
+#include "include/nlohmann/json.hpp"
+
 #include "algorithms/encryption.h"
 #include "algorithms/rc4.h"
 #include "algorithms/des.h"
 #include "algorithms/helpers/generator.h"
-#include "include/nlohmann/json.hpp"
+
+#include "layers/data_layer.h"
+
 using json = nlohmann::json;
 using namespace std;
 
@@ -79,16 +84,15 @@ vector<int> convertStringToInts(string str) {
     return result;
 }
 
-json evaluate(Encryption *encryption, vector<string> plainTexts, int nIter) {
+json evaluate(Encryption *encryption, string plainText, int nIter, size_t plainTextId) {
     json results = json::array();
 
-    for(size_t i = 0; i < plainTexts.size(); i++) {
-        printf("Evaluating on plain text with length %lu\n", plainTexts[i].size());
+        printf("Evaluating on plain text with length %lu\n", plainText.size());
 
         // Run encrypt once to get the cipherText
-        string cipherText = encryption->encrypt(plainTexts[i]);
+        string cipherText = encryption->encrypt(plainText);
 
-        vector<double> encRts = measureEncryptRunningTimesInMs(encryption, plainTexts[i], nIter);
+        vector<double> encRts = measureEncryptRunningTimesInMs(encryption, plainText, nIter);
         double encRtMean = calculateMean(encRts);
         double encRtPopStdDev = calculatePopulationStandardDeviation(encRts, encRtMean);
 
@@ -98,7 +102,7 @@ json evaluate(Encryption *encryption, vector<string> plainTexts, int nIter) {
 
         json result;
 
-        result["plainTextId"] = i;
+        result["plainTextId"] = plainTextId;
         result["cipherText"] = convertStringToInts(cipherText);
         result["encRtMean"] = encRtMean;
         result["encRtPopStdDev"] = encRtPopStdDev;
@@ -106,68 +110,82 @@ json evaluate(Encryption *encryption, vector<string> plainTexts, int nIter) {
         result["decRtPopStdDev"] = decRtPopStdDev;
 
         results.push_back(result);
-    }
 
     return results;
 }
 
-string getCurrentTimeString() {
-    time_t rawTime;
-    time(&rawTime);
-    return strtok(ctime(&rawTime), "\n");
+vector<string> getPlainTexts(DataLayer *dataLayer, vector<pair<string, string>> fileInfos) {
+    vector<string> plainTexts;
+
+    for(size_t i = 0; i < fileInfos.size(); i++) {
+        plainTexts.push_back(dataLayer->readFile(fileInfos[i].second));
+    }
+
+    return plainTexts;
 }
 
-void dumpResult(json result){
-    ofstream file;
-    char fileName[128], filePath[128];
-    string currentTimeString = getCurrentTimeString();
-
-    replace(currentTimeString.begin(), currentTimeString.end(), ':', ' ');
-    sprintf(fileName, "%s.json", currentTimeString.c_str());
-    sprintf(filePath, "./dumps/%s", fileName);
-
+void dump(string filePath, json result){
     ofstream o(filePath);
-    o << setw(4) << result << endl;
+    o << result << endl;
+}
+
+void initReport(vector<string> plainTexts, string reportFilePath, int nIter) {
+    json plainTextsJson = json::array();
+
+    for(size_t i = 0; i < plainTexts.size(); i++) {
+        cout << i << endl;
+        plainTextsJson.push_back(convertStringToInts(plainTexts[i]));
+    }
+
+    json result;
+
+    result["nIter"] = nIter;
+    result["plainTexts"] = plainTextsJson;
+    result["aes"] = json::array();
+    result["des"] = json::array();
+    result["rc4"] = json::array();
+
+    dump(reportFilePath, result);
 }
 
 int main() {
     srand(time(0));
 
-    const string key = "8_chars_";
-    const int N_ITER = 10;
+    const int N_ITER = 1;
+    const string KEY = "8_chars_";
+    const string IV = "_iv_key_";
+    const string FILE_DIR_PATH = "../files/";
+    const string DUMP_DIR_PATH = "./dumps/";
 
-    vector<size_t> plainTextLengths;
-    size_t minPtLen, maxPtLen; // 96 192
+    DataLayer *dataLayer = new DataLayer();
 
-    cout << "Enter minimum plain text length: ";
-    cin >> minPtLen;
+    vector<pair<string, string>> fileInfos{
+        make_pair("1mb_binary.bin",  FILE_DIR_PATH + "1mb_binary.bin"),
+        make_pair("1mb_text.txt",    FILE_DIR_PATH + "1mb_text.txt"),
+        make_pair("10mb_binary.bin", FILE_DIR_PATH + "10mb_binary.bin"),
+        make_pair("10mb_text.txt",   FILE_DIR_PATH + "10mb_text.txt"),
+        make_pair("50mb_binary.bin", FILE_DIR_PATH + "50mb_binary.bin"),
+        make_pair("50mb_text.txt",   FILE_DIR_PATH + "50mb_text.txt")
+    };
 
-    cout << "Enter maximum plain text length: ";
-    cin >> maxPtLen;
+//    initReport(getPlainTexts(dataLayer, fileInfos), DUMP_DIR_PATH + "report.json", N_ITER);
 
-    for(int i = minPtLen; i <= maxPtLen; i++) {
-        plainTextLengths.push_back(i);
-    }
-    vector<string> plainTexts = generatePlainTexts(new PeriodicPlainTextGenerator(), plainTextLengths);
+    // do this manually, because if all of the results are combined into one file, the file size is too big (> 1 GB)
+    Encryption *encryption = new DES(KEY, IV);
+    const int fileIndex = 0;
+    const string dumpSubDirName = "des";
 
-    json result;
+    json result = evaluate(
+       encryption,
+       dataLayer->readFile(fileInfos[fileIndex].second),
+       N_ITER,
+       fileIndex
+    );
 
-    // nIter data
-    result["nIter"] = N_ITER;
-
-    // plainTexts data
-    json plainTextsJson = json::array();
-    for(size_t i = 0; i < plainTexts.size(); i++) {
-        plainTextsJson.push_back(convertStringToInts(plainTexts[i]));
-    }
-    result["plainTexts"] = plainTextsJson;
-
-    // rc4 data
-    result["rc4"] = evaluate(new ARC4(key), plainTexts, N_ITER);
-
-    // TODO: add AES and DES
-
-    dumpResult(result);
+    dump(
+        DUMP_DIR_PATH + dumpSubDirName + "/" + fileInfos[fileIndex].first + ".json",
+        result
+    );
 
     return 0;
 }
