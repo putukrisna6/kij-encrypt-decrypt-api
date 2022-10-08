@@ -4,7 +4,6 @@
 #include "encryption.h"
 #include "helpers/convertion.h"
 #include "helpers/operation.h"
-#include "helpers/log.h"
 
 typedef unsigned short int usi;
 
@@ -78,10 +77,6 @@ class DES : public Encryption {
             }
 
             return plainText;
-        }
-
-        void setLog(bool log) {
-            activateLog(log);
         }
 
     private:
