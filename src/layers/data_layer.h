@@ -5,19 +5,18 @@
 
 using namespace std;
 
-class DataLayer 
+class DataLayer
 {
-    private:
+    public:
         bool __isFileExists(string filePath) {
             if (FILE *file = fopen(filePath.c_str(), "r")) {
                 fclose(file);
                 return true;
             } else {
                 return false;
-            }   
+            }
         }
 
-    public:
         string readFile(string filePath) {
             ifstream rf(filePath.c_str(), ios::out);
 
