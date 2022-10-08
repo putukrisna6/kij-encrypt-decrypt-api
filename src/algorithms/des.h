@@ -41,8 +41,6 @@ class DES : public Encryption {
          * @return string
          */
         string encrypt(string plainText) {
-            // log("################# Encryption #################\n");
-
             bool inBinary = isBinaryString(plainText);
             if (!inBinary) {
                 plainText = stringToBinary(plainText);
@@ -52,7 +50,6 @@ class DES : public Encryption {
 
             if (!inBinary) {
                 cipherText = binaryToString(cipherText);
-                // log("Combined string: " + cipherText + "\n");
             }
 
             return cipherText;
@@ -68,8 +65,6 @@ class DES : public Encryption {
          * @return string
          */
         string decrypt(string cipherText) {
-            // log("################# Decryption #################\n");
-
             bool inBinary = isBinaryString(cipherText);
             if (!inBinary) {
                 cipherText = stringToBinary(cipherText);
@@ -80,7 +75,6 @@ class DES : public Encryption {
 
             if (!inBinary) {
                 plainText = binaryToString(plainText);
-                // log("Combined string: " + plainText + "\n");
             }
 
             return plainText;
@@ -248,7 +242,6 @@ class DES : public Encryption {
                 : decryptionRoundKeys;
 
             for (string block : blocks) {
-                // log("Block " + to_string(blockCounter));
 
                 if (doEncryption) {
                     block = XOR(block, previousCipher);
@@ -264,17 +257,9 @@ class DES : public Encryption {
                     previousCipher = block;
                 }
 
-                // log("--------------------------------------------");
-                // log("Output at block " + to_string(blockCounter) + ": " + 
-                //     binToHex(cipherText) + "\n"
-                // );
-
                 combined += cipherText;
                 blockCounter++;
             }
-
-            // log("--------------------------------------------");
-            // log("Combined: " + binToHex(combined) + "\n");
 
             return combined;
         }
@@ -288,7 +273,6 @@ class DES : public Encryption {
             // Initial permutation
             string binPT = plainText;
             binPT = permute(binPT, ip, 64);
-            // log("After initial permutation: " + binToHex(binPT));
 
             // Splitting
             string left = binPT.substr(0, 32);
@@ -298,11 +282,8 @@ class DES : public Encryption {
                 "After splitting: LPT=%s RPT=%s\n",
                 binToHex(left).c_str(), binToHex(right).c_str()
             );
-            // log(convertToString(buffer));
 
             // 16 Rounds of DES functions
-            // log("Round XX |   LPT    |   RPT    | Round Keys");
-            // log("--------------------------------------------");
             for (usi i = 0; i < 16; i++) {
                 // Expansion Permutation
                 string RPT = permute(right, ep, 48);
@@ -322,13 +303,6 @@ class DES : public Encryption {
                 if (i < 15) {
                     swap(left, right);
                 }
-
-                // char buffer[64];
-                // sprintf(
-                //     buffer, "Round %02d | %s | %s | %s", (i + 1),
-                //     binToHex(left).c_str(), binToHex(right).c_str(),
-                //     binToHex(roundKeys[i]).c_str());
-                // log(convertToString(buffer));
             }
 
             // Final Permutation
