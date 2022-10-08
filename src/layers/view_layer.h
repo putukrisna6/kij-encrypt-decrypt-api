@@ -12,8 +12,18 @@ class ViewLayer
             cout << "-----------------------------\n";
         }
 
+        void terminateDisplay() {
+            cout << "\nTerminating\n";
+            cout << "\tSee you soon :)\n";
+        }
+
+        void invalidOptionDisplay(int option) {
+            cout << "\nInvalid option chosen\n";
+            cout << "\t" << option << " is not a valid option\n";
+        }
+
         void timeTakenDisplay(int time) {
-            cout << "Encryption succeeded\n";
+            cout << "\nEncryption succeeded\n";
             cout << "\tTook " << time << " microsecond(s)\n";
         }
 
@@ -38,6 +48,11 @@ class ViewLayer
 
             int chosenOption;
             cin >> chosenOption;
+                
+            if (!cin) {
+                throw runtime_error("not a integer");
+            }
+
             return chosenOption;
         }
 
