@@ -3,9 +3,9 @@
 #include "include/nlohmann/json.hpp"
 
 #include "algorithms/encryption.h"
-#include "algorithms/rc4.h"
+#include "algorithms/aes.h"
 #include "algorithms/des.h"
-#include "algorithms/helpers/generator.h"
+#include "algorithms/rc4.h"
 
 #include "layers/data_layer.h"
 
@@ -155,9 +155,13 @@ void initReport(vector<string> plainTexts, string reportFilePath, int nIter) {
 }
 
 int main() {
-    const int N_ITER = 1;
+    const int N_ITER = 10;
+
+    const string AES_KEY = "16_long_private_";
+    const string AES_IV = "_iv_key_for_aes_";
     const string KEY = "8_chars_";
     const string IV = "_iv_key_";
+
     const string FILE_DIR_PATH = "../files/";
     const string DUMP_DIR_PATH = "./dumps/";
 
@@ -179,8 +183,8 @@ int main() {
 
     map<string, Encryption*> ciphers;
 
-//    ciphers["aes"] = AES_V2(KEY, IV);
-//    ciphers["des"] = new DES(KEY, IV);
+    ciphers["aes"] = new AES(AES_KEY, AES_IV);
+    ciphers["des"] = new DES(KEY, IV);
     ciphers["rc4"] = new ARC4(KEY);
 
     for(auto cipher: ciphers) {
