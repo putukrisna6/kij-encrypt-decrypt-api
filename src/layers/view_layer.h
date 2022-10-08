@@ -94,6 +94,11 @@ class ViewLayer
             string data;
             getchar();
             getline(cin, data);
+
+            if (data.size() < 1) {
+                throw runtime_error("invalid text length");
+            }
+
             return data;
         }
 };
