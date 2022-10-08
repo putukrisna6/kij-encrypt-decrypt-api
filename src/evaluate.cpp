@@ -114,11 +114,21 @@ json evaluate(Encryption *encryption, string plainText, int nIter, size_t plainT
     return results;
 }
 
-vector<string> getPlainTexts(DataLayer *dataLayer, vector<pair<string, string>> fileInfos) {
+class FileInfo {
+    public:
+        string name, path;
+
+        FileInfo(string rootPath, string fileName) {
+            this->name = fileName;
+            this->path = rootPath + fileName;
+        }
+};
+
+vector<string> getPlainTexts(DataLayer *dataLayer, vector<FileInfo> fileInfos) {
     vector<string> plainTexts;
 
     for(size_t i = 0; i < fileInfos.size(); i++) {
-        plainTexts.push_back(dataLayer->readFile(fileInfos[i].second));
+        plainTexts.push_back(dataLayer->readFile(fileInfos[i].path));
     }
 
     return plainTexts;
@@ -148,9 +158,16 @@ void initReport(vector<string> plainTexts, string reportFilePath, int nIter) {
     dump(reportFilePath, result);
 }
 
-int main() {
-    srand(time(0));
+bool isFileExist(string filePath) {
+    FILE *file;
+    if (file = fopen(filePath.c_str(), "r")) {
+        fclose(file);
+        return true;
+    }
+    return false;
+}
 
+int main() {
     const int N_ITER = 1;
     const string KEY = "8_chars_";
     const string IV = "_iv_key_";
@@ -159,33 +176,49 @@ int main() {
 
     DataLayer *dataLayer = new DataLayer();
 
-    vector<pair<string, string>> fileInfos{
-        make_pair("1mb_binary.bin",  FILE_DIR_PATH + "1mb_binary.bin"),
-        make_pair("1mb_text.txt",    FILE_DIR_PATH + "1mb_text.txt"),
-        make_pair("10mb_binary.bin", FILE_DIR_PATH + "10mb_binary.bin"),
-        make_pair("10mb_text.txt",   FILE_DIR_PATH + "10mb_text.txt"),
-        make_pair("50mb_binary.bin", FILE_DIR_PATH + "50mb_binary.bin"),
-        make_pair("50mb_text.txt",   FILE_DIR_PATH + "50mb_text.txt")
+    vector<FileInfo> fileInfos{
+        FileInfo(FILE_DIR_PATH, "1mb_binary.bin"),
+        FileInfo(FILE_DIR_PATH, "1mb_text.txt"),
+        FileInfo(FILE_DIR_PATH, "10mb_binary.bin"),
+        FileInfo(FILE_DIR_PATH, "10mb_text.txt"),
+        FileInfo(FILE_DIR_PATH, "50mb_binary.bin"),
+        FileInfo(FILE_DIR_PATH, "50mb_text.txt")
     };
 
-//    initReport(getPlainTexts(dataLayer, fileInfos), DUMP_DIR_PATH + "report.json", N_ITER);
+    const string reportFilePath = DUMP_DIR_PATH + "report.json";
+    if(!isFileExist(reportFilePath)) {
+        initReport(getPlainTexts(dataLayer, fileInfos), reportFilePath, N_ITER);
+    }
 
-    // do this manually, because if all of the results are combined into one file, the file size is too big (> 1 GB)
-    Encryption *encryption = new DES(KEY, IV);
-    const int fileIndex = 0;
-    const string dumpSubDirName = "des";
+    map<string, Encryption*> ciphers;
 
-    json result = evaluate(
-       encryption,
-       dataLayer->readFile(fileInfos[fileIndex].second),
-       N_ITER,
-       fileIndex
-    );
+//    ciphers["aes"] = AES_V2(KEY, IV);
+//    ciphers["des"] = new DES(KEY, IV);
+    ciphers["rc4"] = new ARC4(KEY);
 
-    dump(
-        DUMP_DIR_PATH + dumpSubDirName + "/" + fileInfos[fileIndex].first + ".json",
-        result
-    );
+    for(auto cipher: ciphers) {
+        string resultDirPath = DUMP_DIR_PATH + cipher.first + "/";
+
+        for(size_t i = 0; i < fileInfos.size(); i++) {
+            string resultFilePath = resultDirPath + fileInfos[i].name + ".json";
+
+            if(!isFileExist(resultFilePath)) {
+                cout << "Working on " << resultFilePath << endl;
+
+                json result = evaluate(
+                   cipher.second,
+                   dataLayer->readFile(fileInfos[i].path),
+                   N_ITER,
+                   i
+                );
+
+                dump(
+                    resultFilePath,
+                    result
+                );
+            }
+        }
+    }
 
     return 0;
 }
