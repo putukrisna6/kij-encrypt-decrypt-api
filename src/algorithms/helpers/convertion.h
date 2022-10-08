@@ -63,10 +63,14 @@ string hexToBin(string s) {
     return bin;
 }
 
+string byteToBinary(char b) {
+    return bitset<8>(b).to_string();
+}
+
 string stringToBinary(string s) {
     string bin = "";
     for (char &_char : s) {
-        bin += bitset<8>(_char).to_string();
+        bin += byteToBinary(_char);
     }
     return bin;
 }
@@ -137,4 +141,17 @@ bool isBinaryString(string str) {
     return true; 
 }
 
+/**
+ * Convert String of binary to a bitset<8>
+ *
+ * @param binaryString
+ * @return 8 bit in form of bitset
+ */
+bitset<8> stringBinaryToBitset(string binaryString) {
+    if (!isBinaryString(binaryString)) {
+        throw runtime_error("Text is not binary string");
+    }
+    bitset<8> binary(binaryString);
+    return binary;
+}
 #endif

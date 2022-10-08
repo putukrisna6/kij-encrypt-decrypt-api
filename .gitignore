@@ -38,6 +38,11 @@
 *.out
 *.app
 
+# IDE Config
+.idea
+CMakeLists.txt
+cmake-build-debug
+
 # Custom
 src/main
 downloads/
