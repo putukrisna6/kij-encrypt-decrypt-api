@@ -47,7 +47,7 @@ src/server
 *tempCodeRunnerFile.cpp
 
 # Dumps
-src/dumps/*.json
+src/dumps/**/*.json
 
 # Jupyter Notebook
 .ipynb_checkpoints
