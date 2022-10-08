@@ -53,7 +53,7 @@ void __instantiateEncryption(int chosenAlgo) {
             encryption = new DES(desKey, desIV);
             break;
         case ALGO_AES:
-            encryption = new AES_V2(aesKey);
+            encryption = new AES(aesKey, aesIV);
             break;
         default:
             throw runtime_error("invalid option");
