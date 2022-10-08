@@ -202,16 +202,13 @@ void receiveDataFlow() {
 }
 
 int main() {
-    // 0. user gives data to be sent
     viewLayer.introDisplay();
 
-    int chosenOption = -1;
-    chosenOption = viewLayer.optionsDisplay();
+    int chosenOption = viewLayer.optionsDisplay();
 
-    // possible command layer? lmao
     switch (chosenOption) {
         case 0:
-            cout << "Terminating\n";
+            viewLayer.terminateDisplay();
             return 0;
         case 1:
             sendDataFlow();
@@ -220,7 +217,7 @@ int main() {
             receiveDataFlow();
             break;
         default:
-            cout << "Invalid option\n";
+            viewLayer.invalidOptionDisplay(chosenOption);
     }
 
     return 0;
