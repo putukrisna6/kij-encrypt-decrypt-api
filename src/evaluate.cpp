@@ -85,33 +85,29 @@ vector<int> convertStringToInts(string str) {
 }
 
 json evaluate(Encryption *encryption, string plainText, int nIter, size_t plainTextId) {
-    json results = json::array();
+    printf("Evaluating on plain text with length %lu\n", plainText.size());
 
-        printf("Evaluating on plain text with length %lu\n", plainText.size());
+    // Run encrypt once to get the cipherText
+    string cipherText = encryption->encrypt(plainText);
 
-        // Run encrypt once to get the cipherText
-        string cipherText = encryption->encrypt(plainText);
+    vector<double> encRts = measureEncryptRunningTimesInMs(encryption, plainText, nIter);
+    double encRtMean = calculateMean(encRts);
+    double encRtPopStdDev = calculatePopulationStandardDeviation(encRts, encRtMean);
 
-        vector<double> encRts = measureEncryptRunningTimesInMs(encryption, plainText, nIter);
-        double encRtMean = calculateMean(encRts);
-        double encRtPopStdDev = calculatePopulationStandardDeviation(encRts, encRtMean);
+    vector<double> decRts = measureDecryptRunningTimesInMs(encryption, cipherText, nIter);
+    double decRtMean = calculateMean(decRts);
+    double decRtPopStdDev = calculatePopulationStandardDeviation(decRts, decRtMean);
 
-        vector<double> decRts = measureDecryptRunningTimesInMs(encryption, cipherText, nIter);
-        double decRtMean = calculateMean(decRts);
-        double decRtPopStdDev = calculatePopulationStandardDeviation(decRts, decRtMean);
+    json result;
 
-        json result;
+    result["plainTextId"] = plainTextId;
+    result["cipherText"] = convertStringToInts(cipherText);
+    result["encRtMean"] = encRtMean;
+    result["encRtPopStdDev"] = encRtPopStdDev;
+    result["decRtMean"] = decRtMean;
+    result["decRtPopStdDev"] = decRtPopStdDev;
 
-        result["plainTextId"] = plainTextId;
-        result["cipherText"] = convertStringToInts(cipherText);
-        result["encRtMean"] = encRtMean;
-        result["encRtPopStdDev"] = encRtPopStdDev;
-        result["decRtMean"] = decRtMean;
-        result["decRtPopStdDev"] = decRtPopStdDev;
-
-        results.push_back(result);
-
-    return results;
+    return result;
 }
 
 class FileInfo {
