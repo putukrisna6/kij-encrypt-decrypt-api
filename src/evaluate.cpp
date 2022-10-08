@@ -154,15 +154,6 @@ void initReport(vector<string> plainTexts, string reportFilePath, int nIter) {
     dump(reportFilePath, result);
 }
 
-bool isFileExist(string filePath) {
-    FILE *file;
-    if (file = fopen(filePath.c_str(), "r")) {
-        fclose(file);
-        return true;
-    }
-    return false;
-}
-
 int main() {
     const int N_ITER = 1;
     const string KEY = "8_chars_";
@@ -182,7 +173,7 @@ int main() {
     };
 
     const string reportFilePath = DUMP_DIR_PATH + "report.json";
-    if(!isFileExist(reportFilePath)) {
+    if(!dataLayer->__isFileExists(reportFilePath)) {
         initReport(getPlainTexts(dataLayer, fileInfos), reportFilePath, N_ITER);
     }
 
@@ -198,7 +189,7 @@ int main() {
         for(size_t i = 0; i < fileInfos.size(); i++) {
             string resultFilePath = resultDirPath + fileInfos[i].name + ".json";
 
-            if(!isFileExist(resultFilePath)) {
+            if(!dataLayer->__isFileExists(resultFilePath)) {
                 cout << "Working on " << resultFilePath << endl;
 
                 json result = evaluate(
