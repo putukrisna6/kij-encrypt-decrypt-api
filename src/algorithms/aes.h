@@ -39,10 +39,10 @@ public:
         std::string tag = "Encrypt()";
         log(tag, "==== Begin Encrypting ====");
 
-        bool isBinary = isBinaryString(plainText);
-        if (!isBinary) {
+//        bool isBinary = isBinaryString(plainText);
+//        if (!isBinary) {
             plainText = stringToBinary(plainText);
-        }
+//        }
 
         size_t blockCount = 1;
         string textToProcess;
@@ -62,9 +62,9 @@ public:
             blockCount++;
         }
 
-        if (!isBinary) {
+//        if (!isBinary) {
             cipherText = binaryToString(cipherText);
-        }
+//        }
 
         log(tag, "==== Encrypt Finished ====");
         return cipherText;
@@ -74,10 +74,10 @@ public:
         string tag = "Decrypt()";
         log(tag, "==== Begin Decrypting ====");
 
-        bool isBinary = isBinaryString(cipherText);
-        if (!isBinary) {
+//        bool isBinary = isBinaryString(cipherText);
+//        if (!isBinary) {
             cipherText = stringToBinary(cipherText);
-        }
+//        }
 
         size_t blockCount = 1;
         string plainText;
@@ -99,9 +99,9 @@ public:
         }
         plainText = pkcsUnpad(plainText, blockBytesLen);
 
-        if (!isBinary) {
+//        if (!isBinary) {
             plainText = binaryToString(plainText);
-        }
+//        }
 
         log(tag, "==== Decrypt Finished ====");
         return plainText;
