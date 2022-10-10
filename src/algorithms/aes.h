@@ -466,8 +466,10 @@ private:
     }
 
     void log128BitBinaryStringAs32BitEachRow(string tag, string message) {
-        for (int k = 0; k < message.length() / 32; k++) {
-            log(tag, binToHex(message.substr(k * 32, 32)));
+        if (isLogActive) {
+            for (int k = 0; k < message.length() / 32; k++) {
+                log(tag, binToHex(message.substr(k * 32, 32)));
+            }
         }
     }
 
